@@ -1,5 +1,11 @@
 # Current status
 
+## Local model selection update
+
+Setup now installs dependencies only, with no model downloads. Added native folder browse and full-path fallback, CTranslate2 file checks, explicit multilingual/Persian/Nava profiles and persistent registration under ignored data/local-models.json. Model weights stay in the selected folder. Missing models disable generation; relocated folders need re-registration. Nava remains disabled. The optional install_models.py downloader is manual only. This supersedes earlier setup download notes below.
+
+Validation: seven unit tests, Python compilation, JavaScript syntax and isolated HTTP checks for model registration/restart persistence. Native dialog interaction and real-model inference still need manual QA.
+
 ## Portable setup update
 
 Added Setup.cmd/setup.ps1 and Start.cmd/start.ps1. Setup creates a venv, installs version-pinned direct dependencies and downloads Turbo separately; SkipModel supports existing local weights. Launch does not install dependencies. Assets are optional and ignored by Git along with models/data/venv/tools. README documents clean-device installation. requirements-lock.txt records the current Windows Python 3.14 environment; setup uses requirements.txt to permit compatible transitive dependencies on other Python versions.

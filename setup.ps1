@@ -1,4 +1,4 @@
-param([switch]$SkipModel, [string]$Python = 'python')
+param([string]$Python = 'python')
 $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
 function Invoke-Checked {
@@ -14,6 +14,5 @@ if (!(Test-Path '.venv/Scripts/python.exe')) {
 $venvPython = Join-Path $PSScriptRoot '.venv/Scripts/python.exe'
 Invoke-Checked $venvPython @('-m', 'pip', 'install', '-r', 'requirements.txt')
 New-Item -ItemType Directory -Force assets, models, data | Out-Null
-if (!$SkipModel) { Invoke-Checked $venvPython @('install_models.py', 'turbo') }
 Invoke-Checked $venvPython @('-c', 'import app, faster_whisper')
 Write-Host 'Setup complete. Double-click Start.cmd to launch SuperSub.'

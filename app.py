@@ -1,5 +1,6 @@
 from pathlib import Path
-import json, uuid, threading, shutil
+import json, uuid, threading, shutil, subprocess, sys
+import local_models
 from fastapi import FastAPI, UploadFile, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -10,7 +11,6 @@ DATA.mkdir(exist_ok=True)
 app = FastAPI(title='SuperSub')
 lock = threading.Lock()
 jobs = {}
-MODELS = {'turbo': 'whisper-large-v3-turbo', 'persian': 'givia-persian', 'nava': 'nava-ct2'}
 
 def project(pid):
     if not pid.isalnum(): raise HTTPException(400, 'Invalid project')
@@ -38,7 +38,24 @@ def reflow(words, limit):
 
 @app.get('/api/models')
 def models():
-    return [dict(id=k, name=v, ready=(ROOT/'models'/v/'model.bin').exists(), experimental=k!='turbo') for k,v in MODELS.items()]
+    return [dict(id=k, name=v['name'], path=v['path'], profile=v['profile'], ready=local_models.valid_folder(Path(v['path'])), experimental=v['profile']!='multilingual') for k,v in local_models.catalog().items()]
+
+@app.post('/api/models/register')
+def register_model(body: dict):
+    try:
+        key, entry = local_models.register(str(body.get('path','')), body.get('profile','multilingual'))
+    except ValueError as e:
+        raise HTTPException(400,str(e))
+    return dict(id=key, **entry)
+
+@app.post('/api/models/browse')
+def browse_model():
+    try:
+        result = subprocess.run([sys.executable,str(ROOT/'model_picker.py')],capture_output=True,text=True,encoding='utf-8',timeout=120,creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
+        if result.returncode: raise RuntimeError('Folder picker is unavailable. Paste the model folder path instead.')
+        return json.loads(result.stdout)
+    except (subprocess.TimeoutExpired, RuntimeError, json.JSONDecodeError) as e:
+        raise HTTPException(400,'Folder picker closed or unavailable. Paste the model folder path instead.') from e
 
 @app.get('/api/projects')
 def projects():
@@ -69,17 +86,18 @@ def delete(pid: str):
 def run(pid: str, settings: dict):
     p=project(pid)
     model=settings.get('model','turbo'); limit=int(settings.get('limit',8))
-    if model not in MODELS or not 1<=limit<=30: raise HTTPException(400,'Invalid settings')
-    if model=='nava': raise HTTPException(400,'Nava requires validated forced alignment; experimental transcription is disabled.')
-    if model!='turbo' and settings.get('language')!='fa': raise HTTPException(400,'Select Persian for this model')
-    if not (ROOT/'models'/MODELS[model]/'model.bin').exists(): raise HTTPException(400,'Model is not installed')
+    entry = local_models.catalog().get(model)
+    if not entry or not 1<=limit<=30: raise HTTPException(400,'Invalid settings')
+    if entry['profile']=='nava': raise HTTPException(400,'Nava requires validated forced alignment; experimental transcription is disabled.')
+    if entry['profile']=='persian' and settings.get('language')!='fa': raise HTTPException(400,'Select Persian for this model')
+    if not local_models.valid_folder(Path(entry['path'])): raise HTTPException(400,'Local model unavailable. Locate its folder again.')
     if not lock.acquire(False): raise HTTPException(409,'Another transcription is running')
     jobs[pid]={'status':'running','progress':0,'cancel':False}
     def work():
         try:
             from faster_whisper import WhisperModel
             value=json.loads((p/'project.json').read_text(encoding='utf-8'))
-            engine=WhisperModel(str(ROOT/'models'/MODELS[model]),device='cpu',compute_type='int8',local_files_only=True)
+            engine=WhisperModel(entry['path'],device='cpu',compute_type='int8',local_files_only=True)
             segments,info=engine.transcribe(str(p/value['source']),language=settings.get('language') or None,word_timestamps=True,vad_filter=True,initial_prompt=settings.get('glossary') or None)
             words=[]
             for seg in segments:
