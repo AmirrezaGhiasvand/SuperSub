@@ -1,5 +1,11 @@
 # Current status
 
+## Decoder compatibility and loading screen
+
+Fixed actual generation failure caused by faster-whisper 1.2.1 passing removed metadata_errors to PyAV 19. Normalized WAV is now read through Python wave into float32 NumPy samples and passed directly to transcribe, bypassing PyAV decoding. Added a modal generation loading screen with elapsed time, mirrored phase/progress and cancellation, plus a persistent sidebar minimize/expand button. Endpoint 404 errors include restart guidance; /api/health identifies this build. Existing running servers must be restarted.
+
+Validation: 12 tests pass, including a regression asserting the engine receives samples rather than a filename. Actual installed Turbo loaded and transcribed a silent one-second sample with av.open forbidden; completed successfully with zero segments. This verifies the decoder fix, not Persian recognition accuracy. JavaScript syntax passes; browser interaction still needs manual QA.
+
 ## Playback and generation fixes
 
 Added bundled-FFmpeg preview conversion to H.264/AAC with MP4 faststart and 16 kHz mono extraction for inference. Central workspace owns media selection, generation/cancellation and editor actions; the sidebar contains configuration only. Generation has immediate busy state, phase labels, progress and completion dialogs. History requires generated nonempty cues. Added per-project retrieval so incomplete projects remain accessible without appearing in history. Export saves pending edits first and supports SRT/VTT/text. Editing/reflow while generation runs is blocked. Invalid timings and word limits receive useful errors; no-speech runs preserve previous results. Setup remains dependencies-only.

@@ -11,6 +11,10 @@ class MediaTests(unittest.TestCase):
             subprocess.run([media_tools.imageio_ffmpeg.get_ffmpeg_exe(),'-v','error','-f','lavfi','-i','testsrc=size=160x120:rate=10','-f','lavfi','-i','sine=frequency=400','-t','1','-c:v','ffv1','-c:a','pcm_s16le',str(source)],check=True,capture_output=True)
             media_tools.convert(source,root/'preview.mp4',preview=True)
             media_tools.convert(source,root/'audio.wav')
+            samples=media_tools.load_audio(root/'audio.wav')
+            self.assertEqual(samples.dtype.name,'float32')
+            self.assertGreater(len(samples),1000)
+            self.assertLessEqual(abs(samples).max(),1)
             self.assertGreater((root/'preview.mp4').stat().st_size,100)
             import wave
             with wave.open(str(root/'audio.wav')) as audio:

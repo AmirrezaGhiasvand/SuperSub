@@ -1,6 +1,15 @@
 """Bundled FFmpeg provides codecs without changing system-wide codec packs."""
 import subprocess
 import imageio_ffmpeg
+import wave
+import numpy as np
+
+def load_audio(path):
+    """Read our normalized PCM directly, avoiding PyAV-version decoder APIs."""
+    with wave.open(str(path),'rb') as audio:
+        if audio.getframerate()!=16000 or audio.getnchannels()!=1 or audio.getsampwidth()!=2:
+            raise ValueError('Expected 16 kHz mono 16-bit PCM audio.')
+        return np.frombuffer(audio.readframes(audio.getnframes()),dtype='<i2').astype(np.float32)/32768.0
 
 def convert(source, target, preview=False):
     args=[imageio_ffmpeg.get_ffmpeg_exe(),'-nostdin','-y','-v','error','-i',str(source)]

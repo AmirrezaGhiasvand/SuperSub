@@ -49,6 +49,10 @@ This downloads and converts [Givia Persian Turbo](https://huggingface.co/givia/w
 
 ## Using SuperSub
 
+Generation opens a loading screen with phase, elapsed time and cancellation. The settings panel can be minimized with its arrow button; this preference is remembered. After updating code, stop the server with Ctrl+C, restart Start.cmd and hard-refresh the page (Ctrl+F5). A running server does not reload changes automatically.
+
+The inference pipeline reads FFmpeg-normalized PCM into float32 samples directly. This avoids the faster-whisper 1.2.1 / PyAV 19 `metadata_errors` incompatibility without modifying installed third-party packages.
+
 The left panel contains settings only. Select media and generate from the central workspace. Generation immediately enters a loading state and reports audio preparation, model loading, speech recognition, and subtitle building. A completion dialog appears when the saved subtitles are ready. Processing percentage is approximate; preparation and loading use an indeterminate indicator.
 
 FFmpeg codecs are bundled through imageio-ffmpeg; no system codec pack is required. Imported videos receive a local H.264/AAC MP4 preview (up to 1280 px wide). Preparation can take time for large files; the original file remains unchanged. Seeking and playback use the completed preview. Decode errors appear below the player.

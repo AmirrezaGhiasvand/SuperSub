@@ -15,6 +15,10 @@ lock = threading.Lock()
 jobs = {}
 previews = {}
 
+@app.get('/api/health')
+def health():
+    return {'app':'SuperSub','version':'local-pcm-2'}
+
 def ensure_idle(pid):
     if jobs.get(pid,{}).get('status')=='running':
         raise HTTPException(409,'Wait for generation to finish or cancel it first.')
@@ -146,7 +150,8 @@ def run(pid: str, settings: dict):
             engine=WhisperModel(entry['path'],device='cpu',compute_type='int8',local_files_only=True)
             if jobs[pid]['cancel']: jobs[pid]['status']='cancelled'; return
             jobs[pid]['phase']='Recognizing speech'
-            segments,info=engine.transcribe(str(audio),language=settings.get('language') or None,word_timestamps=True,vad_filter=True,initial_prompt=settings.get('glossary') or None)
+            samples=media_tools.load_audio(audio)
+            segments,info=engine.transcribe(samples,language=settings.get('language') or None,word_timestamps=True,vad_filter=True,initial_prompt=settings.get('glossary') or None)
             words=[]
             for seg in segments:
                 if jobs[pid]['cancel']: jobs[pid]['status']='cancelled'; return

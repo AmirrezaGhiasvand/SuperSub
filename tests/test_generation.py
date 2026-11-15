@@ -14,13 +14,17 @@ class GenerationTests(unittest.TestCase):
         self.tmp=tempfile.TemporaryDirectory(); self.root=Path(self.tmp.name)
         self.pid='abc123'; self.p=self.root/self.pid;self.p.mkdir()
         app.save(self.p,dict(id=self.pid,name='test.mkv',source='source.mkv',words=[],cues=[]))
-        self.patches=[patch.object(app,'DATA',self.root),patch.object(app.threading,'Thread',ImmediateThread),patch.object(app.local_models,'catalog',return_value={'test':dict(path=str(self.root),profile='multilingual')}),patch.object(app.local_models,'valid_folder',return_value=True),patch.object(app.media_tools,'convert')]
+        self.patches=[patch.object(app,'DATA',self.root),patch.object(app.threading,'Thread',ImmediateThread),patch.object(app.local_models,'catalog',return_value={'test':dict(path=str(self.root),profile='multilingual')}),patch.object(app.local_models,'valid_folder',return_value=True),patch.object(app.media_tools,'convert'),patch.object(app.media_tools,'load_audio',return_value=__import__('numpy').zeros(16000,dtype='float32'))]
         for p in self.patches:p.start()
     def tearDown(self):
         for p in reversed(self.patches):p.stop()
         app.jobs.clear();self.tmp.cleanup()
     def engine(self,words):
-        return SimpleNamespace(transcribe=lambda *a,**k:(iter([SimpleNamespace(words=words,end=1)]),SimpleNamespace(duration=1)))
+        def transcribe(samples,**kwargs):
+            self.assertIsInstance(samples,__import__('numpy').ndarray)
+            self.assertEqual(samples.dtype.name,'float32')
+            return iter([SimpleNamespace(words=words,end=1)]),SimpleNamespace(duration=1)
+        return SimpleNamespace(transcribe=transcribe)
     def test_history_only_after_subtitle_and_exports(self):
         self.assertEqual(app.projects(),[])
         word=SimpleNamespace(word='سلام',start=0,end=1)
