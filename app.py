@@ -17,7 +17,7 @@ previews = {}
 
 @app.get('/api/health')
 def health():
-    return {'app':'SuperSub','version':'local-pcm-2'}
+    return {'app':'SuperSub','version':'timeline-1'}
 
 def ensure_idle(pid):
     if jobs.get(pid,{}).get('status')=='running':
@@ -47,10 +47,10 @@ def save(p, value):
     tmp.write_text(json.dumps(value, ensure_ascii=False), encoding='utf-8')
     tmp.replace(p / 'project.json')
 
-def reflow(words, limit):
+def reflow(words, limit, pause=.45):
     cues, group = [], []
     for w in words:
-        if group and (len(group) >= limit or w['start'] - group[-1]['end'] > .7):
+        if group and (len(group) >= limit or w['start'] - group[-1]['end'] >= pause or w['end']-group[0]['start']>6):
             cues.append(dict(start=group[0]['start'], end=group[-1]['end'], text=' '.join(x['word'] for x in group)))
             group = []
         group.append(w)
@@ -87,7 +87,7 @@ def projects():
     for p in DATA.glob('*/project.json'):
         try:
             v=json.loads(p.read_text(encoding='utf-8'))
-            if v.get('generated', bool(v.get('words'))) and v.get('cues'): result.append(v)
+            if v.get('generated', bool(v.get('words'))): result.append(v)
         except (OSError,ValueError): continue
     return result
 
@@ -132,6 +132,9 @@ def run(pid: str, settings: dict):
     model=settings.get('model','turbo')
     try: limit=int(settings.get('limit',8))
     except (ValueError,TypeError): raise HTTPException(400,'Word limit must be an integer from 1 to 30.')
+    try: pause=float(settings.get('pause',.45))
+    except (ValueError,TypeError): raise HTTPException(400,'Pause threshold must be between 0.1 and 2 seconds.')
+    if not math.isfinite(pause) or not .1<=pause<=2: raise HTTPException(400,'Pause threshold must be between 0.1 and 2 seconds.')
     entry = local_models.catalog().get(model)
     if not entry or not 1<=limit<=30: raise HTTPException(400,'Invalid settings')
     if entry['profile']=='nava': raise HTTPException(400,'Nava requires validated forced alignment; experimental transcription is disabled.')
@@ -164,7 +167,7 @@ def run(pid: str, settings: dict):
             if not words:
                 jobs[pid].update(status='empty',phase='No speech detected',progress=100)
                 return
-            value.update(words=words,cues=reflow(words,limit),settings=settings,edited=False,generated=True)
+            value.update(words=words,cues=reflow(words,limit,pause),settings=settings,edited=False,generated=True,duration=float(info.duration))
             save(p,value); jobs[pid].update(status='complete',phase='Complete',progress=100)
         except Exception as e: jobs[pid].update(status='failed',error=str(e))
         finally:

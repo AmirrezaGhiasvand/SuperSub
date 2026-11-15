@@ -34,6 +34,12 @@ class GenerationTests(unittest.TestCase):
         self.assertEqual(len(app.projects()),1)
         self.assertIn(b'WEBVTT',app.export_vtt(self.pid).body)
         self.assertIn('سلام',app.export_text(self.pid).body.decode())
+        app.edit(self.pid,[dict(start=.1,end=.8,text='ویرایش')])
+        restored=app.get_project(self.pid)
+        self.assertEqual(restored['cues'][0]['text'],'ویرایش')
+        self.assertEqual(restored['cues'][0]['start'],.1)
+        app.edit(self.pid,[])
+        self.assertEqual(len(app.projects()),1)
     def test_no_speech_not_added_to_history(self):
         with patch('faster_whisper.WhisperModel',return_value=self.engine([])):
             result=app.run(self.pid,dict(model='test',limit=8))

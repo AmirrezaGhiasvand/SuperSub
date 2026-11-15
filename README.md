@@ -49,6 +49,14 @@ This downloads and converts [Givia Persian Turbo](https://huggingface.co/givia/w
 
 ## Using SuperSub
 
+### Timeline workspace
+
+Subtitles appear over the video and as timed blocks on a scrollable timeline. Click the ruler or a block to seek, adjust zoom for detail, drag a subtitle to move it, or drag its edges to trim. Trims cannot cross neighboring cues. The playhead and overlay follow playback; subtitle text disappears during gaps. This is a preview overlay, not a burned-in video export.
+
+Text/timing edits save automatically after a short delay. A save-status indicator reports errors; fix invalid or overlapping times before switching projects. The editor has no Save, Reflow, Add cue, VTT or Text buttons. SRT download and Delete project remain. New project clears the current media, editor and timeline while retaining saved work and model configuration. Projects are listed in a collapsible left panel; selecting one fetches its latest saved cues/settings and rebuilds the timeline and preview. A project remains in history once it has generated subtitles, even if its cues are later removed.
+
+New generation automatically splits cues at detected word-timestamp gaps (default 0.45 seconds, configurable from 0.1–2 seconds). Punctuation, maximum words and a six-second duration limit also create boundaries. Existing projects keep their saved timings until explicitly regenerated. Pause quality depends on the recognition model's word alignment; this does not add a separate alignment model.
+
 Generation opens a loading screen with phase, elapsed time and cancellation. The settings panel can be minimized with its arrow button; this preference is remembered. After updating code, stop the server with Ctrl+C, restart Start.cmd and hard-refresh the page (Ctrl+F5). A running server does not reload changes automatically.
 
 The inference pipeline reads FFmpeg-normalized PCM into float32 samples directly. This avoids the faster-whisper 1.2.1 / PyAV 19 `metadata_errors` incompatibility without modifying installed third-party packages.
@@ -57,11 +65,11 @@ The left panel contains settings only. Select media and generate from the centra
 
 FFmpeg codecs are bundled through imageio-ffmpeg; no system codec pack is required. Imported videos receive a local H.264/AAC MP4 preview (up to 1280 px wide). Preparation can take time for large files; the original file remains unchanged. Seeking and playback use the completed preview. Decode errors appear below the player.
 
-History includes projects only after successful generation of at least one subtitle. Empty imports, silent clips, failures and cancellations do not create history entries; previously generated results are preserved on failed retries. Working media can remain in data until deleted. Export buttons save pending edits first and support SRT, WebVTT and plain text. Set maximum words to 1 for word-by-word cues.
+History includes projects only after successful generation of at least one subtitle. Empty imports, silent clips, failures and cancellations do not create history entries; previously generated results are preserved on failed retries. Working media can remain in data until deleted. SRT download saves pending edits first. Set maximum words to 1 for word-by-word cues.
 
-Select a video, model, video language and maximum words per cue (default 8). Add optional glossary hints, then generate. Review the video and edit subtitle text or timing. Double-click a cue to seek. **Save edits before Download SRT**; downloads reflect the saved project.
+Select a video, model, video language and maximum words per cue (default 8). Add optional glossary hints, then generate. Review the video and edit subtitle text or timing. Click a cue's play button or its timeline block to seek. Wait for the save-status indicator before closing the browser; SRT download flushes pending edits automatically.
 
-Reflow changes cue length using original word timestamps without rerunning transcription. Reflow refuses saved manual edits because their word alignment may no longer match. Cancellation takes effect between generated segments.
+Cancellation takes effect between processing steps or generated segments. Regeneration replaces existing cues only after confirmation and successful recognition.
 
 Projects and copied media are stored under `data/`. Delete a project in the UI to remove its local copy. Source files selected outside the project folder are untouched.
 

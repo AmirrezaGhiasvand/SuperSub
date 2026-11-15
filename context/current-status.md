@@ -1,5 +1,11 @@
 # Current status
 
+## Timeline workspace
+
+Added scrollable/zoomable media and subtitle tracks, ruler, synchronized draggable-seek playhead, cue block movement/edge trimming with neighbor constraints, active cue highlighting and on-video text overlay. Project selection fetches saved settings/cues and rebuilds timeline; New project flushes edits then resets media/editor without deleting saved projects. Left sidebar includes independently collapsible Projects, alongside existing sidebar minimization. Save/Reflow/Add cue/VTT/Text controls removed; edits autosave through a serialized queue, flush before navigation/export and report failures. Generated projects remain in history after cue deletion. Generation splits at configurable word-timestamp pauses (0.45s default), punctuation, maximum words and 6s duration; existing cues are preserved unless regenerated.
+
+Validation: 14 Python tests and 3 Node geometry/overlay tests pass. DOM checks cover timeline/overlay, serialized autosave, workspace reset, project reopening/settings restoration, removed buttons and left history. Real-browser preview tool failed to start, so visual browser QA remains outstanding. Overlay is preview-only; no burned-in-video export or multi-clip video editing is implemented.
+
 ## Decoder compatibility and loading screen
 
 Fixed actual generation failure caused by faster-whisper 1.2.1 passing removed metadata_errors to PyAV 19. Normalized WAV is now read through Python wave into float32 NumPy samples and passed directly to transcribe, bypassing PyAV decoding. Added a modal generation loading screen with elapsed time, mirrored phase/progress and cancellation, plus a persistent sidebar minimize/expand button. Endpoint 404 errors include restart guidance; /api/health identifies this build. Existing running servers must be restarted.
