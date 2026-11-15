@@ -1,8 +1,10 @@
 from pathlib import Path
 import json, uuid, threading, shutil, subprocess, sys
 import local_models
+import media_tools
+import math
 from fastapi import FastAPI, UploadFile, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 ROOT = Path(__file__).parent
@@ -11,11 +13,29 @@ DATA.mkdir(exist_ok=True)
 app = FastAPI(title='SuperSub')
 lock = threading.Lock()
 jobs = {}
+previews = {}
+
+def ensure_idle(pid):
+    if jobs.get(pid,{}).get('status')=='running':
+        raise HTTPException(409,'Wait for generation to finish or cancel it first.')
+
+def prepare_preview(pid, p, source):
+    previews[pid]={'status':'preparing'}
+    def work():
+        temporary=p/'preview.partial.mp4'
+        try:
+            media_tools.convert(source,temporary,preview=True)
+            temporary.replace(p/'preview.mp4')
+            previews[pid]={'status':'ready'}
+        except Exception as e:
+            previews[pid]={'status':'failed','error':str(e)}
+        finally: temporary.unlink(missing_ok=True)
+    threading.Thread(target=work,daemon=True).start()
 
 def project(pid):
     if not pid.isalnum(): raise HTTPException(400, 'Invalid project')
     p = DATA / pid
-    if not p.exists(): raise HTTPException(404)
+    if not p.is_dir() or not (p/'project.json').is_file(): raise HTTPException(404)
     return p
 
 def save(p, value):
@@ -59,7 +79,25 @@ def browse_model():
 
 @app.get('/api/projects')
 def projects():
-    return [json.loads(p.read_text(encoding='utf-8')) for p in DATA.glob('*/project.json')]
+    result=[]
+    for p in DATA.glob('*/project.json'):
+        try:
+            v=json.loads(p.read_text(encoding='utf-8'))
+            if v.get('generated', bool(v.get('words'))) and v.get('cues'): result.append(v)
+        except (OSError,ValueError): continue
+    return result
+
+@app.get('/api/projects/{pid}')
+def get_project(pid: str):
+    return json.loads((project(pid)/'project.json').read_text(encoding='utf-8'))
+
+@app.get('/api/projects/{pid}/preview')
+def preview_status(pid: str):
+    p=project(pid)
+    if (p/'preview.mp4').exists(): return {'status':'ready'}
+    if pid not in previews:
+        v=get_project(pid); prepare_preview(pid,p,p/v['source'])
+    return previews[pid]
 
 @app.post('/api/projects')
 def upload(file: UploadFile):
@@ -70,45 +108,63 @@ def upload(file: UploadFile):
     with (p / ('source'+suffix)).open('wb') as out: shutil.copyfileobj(file.file, out)
     value = dict(id=pid, name=file.filename, source='source'+suffix, words=[], cues=[])
     save(p,value)
+    prepare_preview(pid,p,p/value['source'])
     return value
 
 @app.get('/api/projects/{pid}/media')
 def media(pid: str):
     p=project(pid); value=json.loads((p/'project.json').read_text(encoding='utf-8'))
-    return FileResponse(p/value['source'])
+    return FileResponse(p/'preview.mp4' if (p/'preview.mp4').exists() else p/value['source'])
 
 @app.delete('/api/projects/{pid}')
 def delete(pid: str):
     if jobs.get(pid,{}).get('status')=='running': raise HTTPException(409,'Cancel processing first')
+    if previews.get(pid,{}).get('status')=='preparing': raise HTTPException(409,'Wait for video preparation to finish.')
     shutil.rmtree(project(pid)); return {'ok':True}
 
 @app.post('/api/projects/{pid}/run')
 def run(pid: str, settings: dict):
     p=project(pid)
-    model=settings.get('model','turbo'); limit=int(settings.get('limit',8))
+    model=settings.get('model','turbo')
+    try: limit=int(settings.get('limit',8))
+    except (ValueError,TypeError): raise HTTPException(400,'Word limit must be an integer from 1 to 30.')
     entry = local_models.catalog().get(model)
     if not entry or not 1<=limit<=30: raise HTTPException(400,'Invalid settings')
     if entry['profile']=='nava': raise HTTPException(400,'Nava requires validated forced alignment; experimental transcription is disabled.')
     if entry['profile']=='persian' and settings.get('language')!='fa': raise HTTPException(400,'Select Persian for this model')
     if not local_models.valid_folder(Path(entry['path'])): raise HTTPException(400,'Local model unavailable. Locate its folder again.')
     if not lock.acquire(False): raise HTTPException(409,'Another transcription is running')
-    jobs[pid]={'status':'running','progress':0,'cancel':False}
+    jobs[pid]={'status':'running','phase':'Preparing audio','progress':None,'cancel':False}
     def work():
         try:
             from faster_whisper import WhisperModel
             value=json.loads((p/'project.json').read_text(encoding='utf-8'))
+            audio=p/'audio.wav'
+            media_tools.convert(p/value['source'],audio)
+            if jobs[pid]['cancel']: jobs[pid]['status']='cancelled'; return
+            jobs[pid]['phase']='Loading model'
             engine=WhisperModel(entry['path'],device='cpu',compute_type='int8',local_files_only=True)
-            segments,info=engine.transcribe(str(p/value['source']),language=settings.get('language') or None,word_timestamps=True,vad_filter=True,initial_prompt=settings.get('glossary') or None)
+            if jobs[pid]['cancel']: jobs[pid]['status']='cancelled'; return
+            jobs[pid]['phase']='Recognizing speech'
+            segments,info=engine.transcribe(str(audio),language=settings.get('language') or None,word_timestamps=True,vad_filter=True,initial_prompt=settings.get('glossary') or None)
             words=[]
             for seg in segments:
                 if jobs[pid]['cancel']: jobs[pid]['status']='cancelled'; return
                 for w in seg.words or []:
+                    if not w.word.strip(): continue
                     words.append(dict(start=w.start,end=w.end,word=w.word.strip().replace('ي','ی').replace('ك','ک')))
-                jobs[pid]['progress']=round(100*seg.end/max(info.duration,.001))
-            value.update(words=words,cues=reflow(words,limit),settings=settings,edited=False)
-            save(p,value); jobs[pid]['status']='complete'
+                jobs[pid]['progress']=min(99,round(100*seg.end/max(info.duration,.001)))
+            if jobs[pid]['cancel']: jobs[pid]['status']='cancelled'; return
+            jobs[pid]['phase']='Building subtitles'
+            if not words:
+                jobs[pid].update(status='empty',phase='No speech detected',progress=100)
+                return
+            value.update(words=words,cues=reflow(words,limit),settings=settings,edited=False,generated=True)
+            save(p,value); jobs[pid].update(status='complete',phase='Complete',progress=100)
         except Exception as e: jobs[pid].update(status='failed',error=str(e))
-        finally: lock.release()
+        finally:
+            try: (p/'audio.wav').unlink(missing_ok=True)
+            finally: lock.release()
     threading.Thread(target=work,daemon=True).start()
     return jobs[pid]
 
@@ -122,18 +178,24 @@ def cancel(pid: str):
 
 @app.put('/api/projects/{pid}/cues')
 def edit(pid: str, cues: list[dict]):
+    ensure_idle(pid)
     previous=0
     for c in cues:
-        if not isinstance(c.get('text'),str) or not 0<=previous<=float(c['start'])<float(c['end']): raise HTTPException(400,'Invalid or overlapping timing')
+        try: start,end=float(c['start']),float(c['end'])
+        except (KeyError,ValueError,TypeError): raise HTTPException(400,'Invalid timing')
+        if not isinstance(c.get('text'),str) or not math.isfinite(start) or not math.isfinite(end) or not 0<=previous<=start<end: raise HTTPException(400,'Invalid or overlapping timing')
         previous=float(c['end'])
+        c['start'],c['end']=start,end
     p=project(pid); v=json.loads((p/'project.json').read_text(encoding='utf-8')); v.update(cues=cues,edited=True); save(p,v)
     return v
 
 @app.post('/api/projects/{pid}/reflow')
 def flow(pid: str, settings: dict):
+    ensure_idle(pid)
     p=project(pid); v=json.loads((p/'project.json').read_text(encoding='utf-8'))
     if v.get('edited'): raise HTTPException(409,'Manual edits exist. Automatic reflow requires realignment, which is not yet available.')
-    limit=int(settings.get('limit',8))
+    try: limit=int(settings.get('limit',8))
+    except (ValueError,TypeError): raise HTTPException(400,'Invalid word limit')
     if not 1<=limit<=30: raise HTTPException(400)
     v['cues']=reflow(v['words'],limit); save(p,v); return v
 
@@ -144,9 +206,23 @@ def stamp(seconds):
 @app.get('/api/projects/{pid}/srt')
 def export(pid: str):
     p=project(pid); v=json.loads((p/'project.json').read_text(encoding='utf-8'))
+    if not v['cues']: raise HTTPException(400,'Generate subtitles before exporting.')
     out=p/'subtitles.srt'
     out.write_text('\n\n'.join(f"{i}\n{stamp(c['start'])} --> {stamp(c['end'])}\n{c['text']}" for i,c in enumerate(v['cues'],1))+'\n',encoding='utf-8')
     return FileResponse(out,filename=Path(v['name']).stem+'.srt')
+
+@app.get('/api/projects/{pid}/vtt')
+def export_vtt(pid: str):
+    v=get_project(pid)
+    if not v['cues']: raise HTTPException(400,'Generate subtitles before exporting.')
+    text='WEBVTT\n\n'+'\n\n'.join(f"{stamp(c['start']).replace(',','.')} --> {stamp(c['end']).replace(',','.')}\n{c['text']}" for c in v['cues'])+'\n'
+    return Response(text,media_type='text/vtt')
+
+@app.get('/api/projects/{pid}/txt')
+def export_text(pid: str):
+    v=get_project(pid)
+    if not v['cues']: raise HTTPException(400,'Generate subtitles before exporting.')
+    return Response('\n'.join(c['text'] for c in v['cues'])+'\n',media_type='text/plain')
 
 app.mount('/assets',StaticFiles(directory=ROOT/'assets', check_dir=False),name='assets')
 app.mount('/',StaticFiles(directory=ROOT/'web',html=True),name='web')

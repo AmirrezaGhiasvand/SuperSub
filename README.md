@@ -49,6 +49,12 @@ This downloads and converts [Givia Persian Turbo](https://huggingface.co/givia/w
 
 ## Using SuperSub
 
+The left panel contains settings only. Select media and generate from the central workspace. Generation immediately enters a loading state and reports audio preparation, model loading, speech recognition, and subtitle building. A completion dialog appears when the saved subtitles are ready. Processing percentage is approximate; preparation and loading use an indeterminate indicator.
+
+FFmpeg codecs are bundled through imageio-ffmpeg; no system codec pack is required. Imported videos receive a local H.264/AAC MP4 preview (up to 1280 px wide). Preparation can take time for large files; the original file remains unchanged. Seeking and playback use the completed preview. Decode errors appear below the player.
+
+History includes projects only after successful generation of at least one subtitle. Empty imports, silent clips, failures and cancellations do not create history entries; previously generated results are preserved on failed retries. Working media can remain in data until deleted. Export buttons save pending edits first and support SRT, WebVTT and plain text. Set maximum words to 1 for word-by-word cues.
+
 Select a video, model, video language and maximum words per cue (default 8). Add optional glossary hints, then generate. Review the video and edit subtitle text or timing. Double-click a cue to seek. **Save edits before Download SRT**; downloads reflect the saved project.
 
 Reflow changes cue length using original word timestamps without rerunning transcription. Reflow refuses saved manual edits because their word alignment may no longer match. Cancellation takes effect between generated segments.
@@ -66,7 +72,7 @@ Source code, tests, setup/launch scripts and project context. **`data/`, `assets
 - **Model unavailable:** click Locate local model and select its existing folder again. Rerunning setup does not download weights. Optional downloads via `install_models.py` are manual only.
 - **Port in use:** run `start.ps1 -Port 8766`.
 - **Browser does not open:** visit the printed local URL manually. Use `start.ps1 -NoBrowser` when desired.
-- **Preview cannot play a codec:** transcription may still work; preview transcoding is not implemented.
+- **Preview cannot play:** wait for local preview conversion to finish. If it fails, check the error under the player and try a valid file. Rerun Setup.cmd if bundled FFmpeg is missing.
 - **No speech / transcription error:** check that the input has a supported audio stream. Errors are displayed in the workspace.
 
 ## Development and status

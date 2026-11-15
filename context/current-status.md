@@ -1,5 +1,13 @@
 # Current status
 
+## Playback and generation fixes
+
+Added bundled-FFmpeg preview conversion to H.264/AAC with MP4 faststart and 16 kHz mono extraction for inference. Central workspace owns media selection, generation/cancellation and editor actions; the sidebar contains configuration only. Generation has immediate busy state, phase labels, progress and completion dialogs. History requires generated nonempty cues. Added per-project retrieval so incomplete projects remain accessible without appearing in history. Export saves pending edits first and supports SRT/VTT/text. Editing/reflow while generation runs is blocked. Invalid timings and word limits receive useful errors; no-speech runs preserve previous results. Setup remains dependencies-only.
+
+Validation: 12 passing unit/integration tests, including actual FFmpeg MKV→MP4/audio conversion, mocked ASR success/silence/failure/cancel and history/export rules; JavaScript syntax check. Browser interaction and real-model Persian inference remain manual QA. Cancellation still waits for the active decoding/loading step; preview preparation is separate and not cancelled by the generation cancel button.
+
+Reviewed reference README and UI source: https://huggingface.co/spaces/mehrshadjavid/jcutpersiansub . Adopted its select/generate/review workflow and added VTT/text exports; no reference code was copied. These notes supersede older playback/history/export limitations below.
+
 ## Local model selection update
 
 Setup now installs dependencies only, with no model downloads. Added native folder browse and full-path fallback, CTranslate2 file checks, explicit multilingual/Persian/Nava profiles and persistent registration under ignored data/local-models.json. Model weights stay in the selected folder. Missing models disable generation; relocated folders need re-registration. Nava remains disabled. The optional install_models.py downloader is manual only. This supersedes earlier setup download notes below.
