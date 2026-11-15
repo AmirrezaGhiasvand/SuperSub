@@ -1,45 +1,26 @@
 # Current status
 
-## Memory protection and automatic word count
+Updated 2026-11-15. This snapshot replaces obsolete chronological implementation notes.
 
-Inference now runs in a disposable subprocess with two CPU/MKL/OpenMP threads, CPU INT8, beam/best-of 1 and a bounded PCM reader (up to 60s, quiet-point cuts in the final 8s). Word timestamps are offset back to the original timeline. Parent server polls atomic worker status files and handles native MKL crashes as recoverable errors; cancellation terminates the worker, model memory exits with the process, saved results are replaced only on success. FFmpeg threads are capped at two. Default-on Automatic — follow speech pauses disables the manual word cap; manual mode remains available. Six-second duration and punctuation limits apply to both modes. Old projects without this setting display manual mode when reopened.
+## Implemented
 
-Validation: worker process smoke with actual Turbo and silence succeeds; tests cover bounded chunks/timeline continuity, offset restoration, native allocation error reporting, cancellation/cleanup and automatic/manual word-count behavior. Available Windows commit memory was around 2.1GB during diagnosis on a 16GB RAM machine; low-memory settings reduce peak demand but cannot guarantee that any selected large model fits. Chunk cuts and greedy decoding may change recognition and need review on speech at boundaries. Browser visual QA remains pending.
+- Windows dependency-only setup/launch scripts; no automatic model download, local model picker/path entry, optional manual download helper.
+- English light/dark UI with minimized sidebar and independently collapsible Projects.
+- Local media import, bundled FFmpeg H.264/AAC preview conversion and mono PCM extraction.
+- Disposable inference process: CPU INT8, two compute threads, greedy decoding, <=60s quiet-boundary audio windows and original timeline offsets. Native memory failures are recoverable; cancellation terminates the inference child.
+- Generation phases, elapsed time, progress, loading and completion dialogs.
+- Default-on automatic word counts from speech pauses (.45s default, .1–2s configurable). Manual cap 1–30 available when disabled. Punctuation and 6s duration limits apply.
+- Zoomable timeline, playhead, cue move/trim, video overlay, autosaved text/timing edits and SRT export.
+- New project reset and persisted project restoration. History starts after generated subtitles and retains generated projects even after cues are removed.
 
-## Timeline workspace
+## Validation
 
-Added scrollable/zoomable media and subtitle tracks, ruler, synchronized draggable-seek playhead, cue block movement/edge trimming with neighbor constraints, active cue highlighting and on-video text overlay. Project selection fetches saved settings/cues and rebuilds timeline; New project flushes edits then resets media/editor without deleting saved projects. Left sidebar includes independently collapsible Projects, alongside existing sidebar minimization. Save/Reflow/Add cue/VTT/Text controls removed; edits autosave through a serialized queue, flush before navigation/export and report failures. Generated projects remain in history after cue deletion. Generation splits at configurable word-timestamp pauses (0.45s default), punctuation, maximum words and 6s duration; existing cues are preserved unless regenerated.
+19 Python tests and 3 Node timeline tests pass. DOM checks cover overlay gaps, serialized autosave, reset, project restoration/settings and removed controls. Actual FFmpeg conversion/audio extraction passed. Installed Turbo passed isolated silence and an eight-second speech sample producing 11 timed words. This confirms operation, not accuracy or long-file reliability.
 
-Validation: 14 Python tests and 3 Node geometry/overlay tests pass. DOM checks cover timeline/overlay, serialized autosave, workspace reset, project reopening/settings restoration, removed buttons and left history. Real-browser preview tool failed to start, so visual browser QA remains outstanding. Overlay is preview-only; no burned-in-video export or multi-clip video editing is implemented.
+## Remaining
 
-## Decoder compatibility and loading screen
+Browser preview tooling failed to initialize: real-browser visual/responsive/accessibility QA remains pending. Full offline tests, long-file memory/stress testing, speech quality at chunk boundaries and comparative Persian benchmarks remain incomplete. Large models can still exceed available memory.
 
-Fixed actual generation failure caused by faster-whisper 1.2.1 passing removed metadata_errors to PyAV 19. Normalized WAV is now read through Python wave into float32 NumPy samples and passed directly to transcribe, bypassing PyAV decoding. Added a modal generation loading screen with elapsed time, mirrored phase/progress and cancellation, plus a persistent sidebar minimize/expand button. Endpoint 404 errors include restart guidance; /api/health identifies this build. Existing running servers must be restarted.
+Preview conversion and audio extraction can finish their current step after cancellation; restart does not resume active jobs. Empty imports may remain on disk outside history. No batch queue, GPU inference, forced alignment/Nava inference, burned-in export, full language list or system-theme mode.
 
-Validation: 12 tests pass, including a regression asserting the engine receives samples rather than a filename. Actual installed Turbo loaded and transcribed a silent one-second sample with av.open forbidden; completed successfully with zero segments. This verifies the decoder fix, not Persian recognition accuracy. JavaScript syntax passes; browser interaction still needs manual QA.
-
-## Playback and generation fixes
-
-Added bundled-FFmpeg preview conversion to H.264/AAC with MP4 faststart and 16 kHz mono extraction for inference. Central workspace owns media selection, generation/cancellation and editor actions; the sidebar contains configuration only. Generation has immediate busy state, phase labels, progress and completion dialogs. History requires generated nonempty cues. Added per-project retrieval so incomplete projects remain accessible without appearing in history. Export saves pending edits first and supports SRT/VTT/text. Editing/reflow while generation runs is blocked. Invalid timings and word limits receive useful errors; no-speech runs preserve previous results. Setup remains dependencies-only.
-
-Validation: 12 passing unit/integration tests, including actual FFmpeg MKV→MP4/audio conversion, mocked ASR success/silence/failure/cancel and history/export rules; JavaScript syntax check. Browser interaction and real-model Persian inference remain manual QA. Cancellation still waits for the active decoding/loading step; preview preparation is separate and not cancelled by the generation cancel button.
-
-Reviewed reference README and UI source: https://huggingface.co/spaces/mehrshadjavid/jcutpersiansub . Adopted its select/generate/review workflow and added VTT/text exports; no reference code was copied. These notes supersede older playback/history/export limitations below.
-
-## Local model selection update
-
-Setup now installs dependencies only, with no model downloads. Added native folder browse and full-path fallback, CTranslate2 file checks, explicit multilingual/Persian/Nava profiles and persistent registration under ignored data/local-models.json. Model weights stay in the selected folder. Missing models disable generation; relocated folders need re-registration. Nava remains disabled. The optional install_models.py downloader is manual only. This supersedes earlier setup download notes below.
-
-Validation: seven unit tests, Python compilation, JavaScript syntax and isolated HTTP checks for model registration/restart persistence. Native dialog interaction and real-model inference still need manual QA.
-
-## Portable setup update
-
-Added Setup.cmd/setup.ps1 and Start.cmd/start.ps1. Setup creates a venv, installs version-pinned direct dependencies and downloads Turbo separately; SkipModel supports existing local weights. Launch does not install dependencies. Assets are optional and ignored by Git along with models/data/venv/tools. README documents clean-device installation. requirements-lock.txt records the current Windows Python 3.14 environment; setup uses requirements.txt to permit compatible transitive dependencies on other Python versions.
-
-Verified: setup with SkipModel, dependency consistency, three unit tests, installer CLI help, and clean-checkout HTTP startup without assets/models/data. Full model download, inference and new-PC installation remain untested. Previous notes below describe the initial delivery and may predate these checks.
-
-Initial implementation created. Backend, browser interface, launcher, model downloader and documentation exist. Existing Turbo files were inspected but not inference-tested. Model downloads and runtime dependency installation have not been completed. No model accuracy claims are verified.
-
-Implemented: import, persisted local JSON projects, model/language/word controls, glossary prompt, CPU transcription, native word timestamps, pause/punctuation reflow, cue editing, seek/highlight, SRT export, deletion, light/dark theme.
-
-Remaining against accepted plan: React/TypeScript/Tailwind migration, SQLite migration, separate worker with robust cancellation/restart tracking, system-theme mode, bundled Persian fonts, full language list, forced alignment and Nava enablement, GPU inference, codec preview proxies, cue-limit export warnings, edit realignment, real model comparisons, browser QA and end-to-end inference tests. Import does not yet validate audio streams in advance. Overlapping edit/transcription operations should be avoided. Project history buttons show the last fetched state; refresh after saving if needed.
+Runtime is FastAPI/static JavaScript and JSON persistence. React/TypeScript/Tailwind/SQLite were original plan choices, not shipped prerequisites. Assets/data/models are excluded from Git.

@@ -1,17 +1,29 @@
 # Infrastructure
 
-Memory-safe inference: inference.py is both the subprocess entry point and parent controller. Per-project worker-request/state/result JSON files carry configuration, status and results; worker.log retains failure diagnostics. Transient JSON files and PCM WAV are removed on completion/cancel/failure. The worker holds the model; the web process never loads it. Parent polls every 200ms, terminates on cancel and reports native allocation exits. Reader yields bounded <=60s PCM chunks at quiet boundaries; engine word timestamps receive chunk offsets. Uses 2 CPU threads/1 worker/INT8/greedy beam1 with environment thread limits set before model libraries import. Generation settings automatic_words defaults true; false applies manual limit.
+## Runtime and setup
 
-Timeline UI uses web/timeline.mjs pure geometry for cue selection and bounded moves/trims. web/app.js renders tracks from saved cue seconds, updates overlay/playhead during playback and serializes PUT /cues autosaves. No separate timeline schema: cue edits are the timeline source of truth and GET /srt exports those same cues. Generation settings include pause threshold (0.1–2s, default .45); generated project metadata includes original duration. New projects preserve user model configuration but clear current media/cue state.
+FastAPI/uvicorn serves static HTML/JS on loopback port 8765. setup.ps1 installs requirements.txt into .venv without model downloads. start.ps1 checks imports and opens the browser. requirements-lock.txt is the captured original Windows environment, not the installation input.
 
-Preview pipeline: import starts a background FFmpeg conversion; GET /api/projects/{id}/preview reports preparing/ready/failed, and /media serves preview.mp4 once ready, with Starlette byte-range support. Original media is retained. Preview jobs are separate from transcription. Generation extracts temporary mono WAV, loads local CPU model, recognizes word timestamps, builds cues and saves; temporary WAV is removed in finally. Status includes phase and nullable progress. Project list filters ungenerated/empty results; GET /api/projects/{id} accesses working projects directly. New export routes: /vtt and /txt. UI lives in web/app.js and web/index.html.
+Frontend: web/index.html, web/app.js, web/timeline.mjs. Timeline and subtitle export use the same cue data. Autosave requests serialize and flush before project navigation/export. Settings/panel preferences persist in the browser.
 
-Local model selection: setup does not download weights. local_models.py discovers legacy model folders and stores externally selected absolute paths/profile metadata in data/local-models.json. GET /api/models reports readiness; POST /api/models/register accepts path and profile (multilingual, persian, nava); POST /api/models/browse opens a native Tk folder dialog in a separate process, returning a path or cancellation. Path entry is the fallback when Tk is unavailable. The runtime uses local_files_only=True. Registration validates required files but does not claim model inference compatibility. The browser remembers its selected model ID.
+## Processing and memory
 
-Windows-first, loopback-only FastAPI application. A static browser frontend is served by the same process at port 8765. faster-whisper uses local CTranslate2 models, CPU INT8 and speech detection. PyAV decodes source audio. One in-process thread runs transcription at a time; cancellation occurs between yielded segments. Restart loses active job status. Project JSON is atomically replaced; concurrent edits during transcription are not supported.
+Import copies source media and starts independent FFmpeg H.264/AAC MP4 preview conversion (faststart, <=1280px width). /preview reports preparing/ready/failed; /media serves preview when ready with byte-range support.
 
-Data: `data/<uuid>/source.<extension>`, `project.json`, and exported `subtitles.srt`. JSON stores source metadata, original word timestamps, cue edits and transcription settings. Source media is copied; project deletion removes the copy. No cloud storage.
+Generation extracts 16kHz mono PCM WAV. inference.py runs as a separate process with thread limits set before native imports: CPU INT8, two threads, one worker, beam/best-of 1. A wave/NumPy reader streams <=60s audio windows, choosing quiet boundaries near the end. Word timestamps receive original offsets. Passing samples bypasses PyAV's incompatible metadata_errors decoder call.
 
-API: GET /api/models and /api/projects; POST /api/projects multipart file; GET /api/projects/{id}/media and /srt; POST /run, /cancel, /reflow; GET /status; PUT /cues; DELETE project. Run accepts model, language, limit and glossary. Cues contain start/end seconds and text. Status uses running/complete/failed/cancelled/idle with optional progress/error.
+Parent controller polls atomic worker status JSON every 200ms, terminates on cancel and reports native memory exits. Model memory is released when the child exits. FFmpeg uses two threads. A global lock allows one generation job. Saved cues are replaced only on successful nonempty recognition.
 
-Detected hardware: NVIDIA GTX 1630, 4096 MiB, driver 566.36. Python 3.14 and Node 24 installed; FFmpeg not on PATH. Planned upgrade: Python 3.11, React/TypeScript frontend, separate worker process, SQLite, GPU compatibility detection, forced alignment and browser preview proxies.
+Cue boundaries: pause .1–2s (default .45), punctuation, 6s duration; automatic_words=true omits the manual word cap, false applies limit 1–30. Active jobs are not resumed after restart.
+
+## Persistence and APIs
+
+data/<id>/ stores source, preview.mp4, project.json, exported SRT and worker.log. Temporary WAV and worker request/state/result JSON are cleaned after generation. JSON project state stores words/cues/settings/duration/generated flag. data/local-models.json stores external CTranslate2 paths/profiles; registration checks required files, inference checks compatibility. Native picker runs model_picker.py separately.
+
+- GET /api/health, /api/models; POST /api/models/register and /api/models/browse.
+- GET /api/projects lists previously generated projects; POST imports multipart file.
+- GET /api/projects/{id} restores saved state; DELETE removes copied local project data.
+- Project routes: GET /preview, /media, /status, /srt; POST /run and /cancel; PUT /cues.
+- /vtt, /txt and /reflow remain backend routes but have no UI controls.
+
+Run input: model, language, glossary, limit, pause, automatic_words. Cues: start/end seconds and text. Status: running/complete/empty/failed/cancelled/idle, phase, nullable progress, optional error. Backend blocks edits during generation and invalid/overlapping timing. No SQL migration exists. Data/models/assets/venv/tools/credentials/caches stay outside Git.

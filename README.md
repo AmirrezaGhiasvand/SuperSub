@@ -1,102 +1,114 @@
 # SuperSub
 
-A local video-to-SRT subtitle studio with an English interface, Persian text editing, light/dark themes, and saved projects. Audio stays on your computer.
+Local video-to-SRT subtitle studio with an English interface, Persian subtitles, a timeline editor, light/dark themes and saved projects. Media and inference stay on your PC.
 
-## Quick setup on Windows
+## Set up on a new Windows PC
 
-1. Install **64-bit Python 3.11 or newer** from [python.org](https://www.python.org/downloads/windows/). Enable **Add Python to PATH**. Python 3.14 passes the current dependency/import tests; actual model inference has not yet been verified.
-2. Clone this repository with Git, or download and extract its ZIP. Open the extracted folder.
-3. Double-click **Setup.cmd**. It installs application dependencies into a local `.venv`. Internet is required for packages. **No model is downloaded.**
-4. Double-click **Start.cmd**. The browser opens at **http://127.0.0.1:8765** once the server is ready.
-5. Click **Locate local model**, then **Browse folders…** (or paste its full path). Select the model profile and click **Use this model**.
-6. Keep the console open while using SuperSub. Press **Ctrl+C** there to stop.
+1. Install **64-bit Python 3.11 or newer** from [python.org](https://www.python.org/downloads/windows/), enabling **Add Python to PATH**. Python 3.14 is the version tested on the development PC.
+2. Clone this repository, or download its ZIP and extract it. Private repository access requires signing in with an authorized GitHub account.
+3. Double-click **Setup.cmd**. It installs dependencies into `.venv` and creates local folders. Internet is needed for packages. **Setup never downloads models.**
+4. Double-click **Start.cmd**. Keep its console open. The app opens at **http://127.0.0.1:8765**.
+5. In Settings, click **Locate local model → Browse folders…**. Select an existing **CTranslate2 Whisper model folder**, choose its profile and click **Use this model**. You can paste its full path if the folder dialog is unavailable.
+6. Select a short Persian video, choose Persian as the video language, and click **Generate subtitles**. Review the output, then **Download SRT**.
 
-No Node.js, GPU, API key, account, or separate FFmpeg installation is required for the current application. Inference runs on CPU INT8; large videos may take considerable time.
+No Node.js, GPU, cloud API key or separate FFmpeg installation is needed to run the app. Codec support is bundled through imageio-ffmpeg. A large model still needs several GB of available system memory; CPU processing can take time.
 
-### PowerShell alternative
+### PowerShell setup
 
 ```powershell
+git clone https://github.com/AmirrezaGhiasvand/SuperSub.git
+cd SuperSub
 powershell -NoProfile -ExecutionPolicy Bypass -File .\setup.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\start.ps1
 ```
 
-To choose an installed Python executable:
+If Python is not on PATH, choose its executable when creating the environment:
 
 ```powershell
-.\setup.ps1 -Python "C:\Path\To\Python\python.exe"
+powershell -NoProfile -ExecutionPolicy Bypass -File .\setup.ps1 -Python "C:\Path\To\Python\python.exe"
 ```
 
-Setup is safe to rerun and stops on installation failures. Launching does not reinstall packages.
+Setup can be rerun. Starting the app does not reinstall packages. Stop with **Ctrl+C** in its console.
 
-## Models and offline use
+## Bring your own model
 
-Setup installs dependencies only. Bring your own local **CTranslate2 Whisper model folder**, wherever it is stored on your PC. The folder must contain `model.bin`, `config.json` and `tokenizer.json`, plus the original model vocabulary/preprocessing files. Registration checks the folder structure; the inference engine validates model compatibility when loading it.
+The selected folder must contain `model.bin`, `config.json`, `tokenizer.json` and the model's original vocabulary/preprocessing files. Do not select a Transformers or ONNX checkpoint. Folder checks confirm required files exist; compatibility is validated when inference loads the model.
 
-Use **Locate local model → Browse folders… → Use this model**. Choose **Multilingual Whisper** for the existing Turbo model, or **Persian specialist** for Persian-only fine-tunes. No copying is required. Paths are remembered locally in `data/local-models.json`; the selected model is remembered in this browser. If you move a folder, locate it again. On systems without Tk folder-dialog support, paste the full folder path. Do not select an unconverted Transformers checkpoint. Existing standard folders under `models/` are still discovered automatically.
+- **Multilingual Whisper:** use for standard Whisper models, including Large V3 Turbo.
+- **Persian specialist:** use for Persian-only fine-tunes; select Persian as video language.
+- **Nava:** registration is possible, but generation is disabled until its separate alignment pipeline is implemented.
 
-Once dependencies and model weights are installed, local Turbo transcription can run without internet. The initial speech detector cache may be populated by the installed runtime; verify offline use with a short clip before relying on it.
+Weights remain in their original location. Paths are remembered in ignored `data/local-models.json`; model selection is remembered by the browser. If a folder moves, locate it again. Standard folders under `models/` are also discovered automatically.
 
-Optional Persian specialist (experimental):
+Optional manual downloads are available through `install_models.py`; they are never run by setup or generation:
 
 ```powershell
+.\.venv\Scripts\python.exe install_models.py turbo
+# Optional Persian conversion requires extra packages:
 .\.venv\Scripts\python.exe -m pip install transformers torch
 .\.venv\Scripts\python.exe install_models.py persian
 ```
 
-This downloads and converts [Givia Persian Turbo](https://huggingface.co/givia/whisper-large-v3-turbo-persian). Select Persian as the language. Consult its model card and attribution terms before redistributing weights.
+The Persian download uses [Givia Persian Turbo](https://huggingface.co/givia/whisper-large-v3-turbo-persian). Review its model card and attribution terms before redistributing weights.
 
-`install_models.py nava` downloads [Nava CTranslate2](https://huggingface.co/Nimruz/Nava-ct2), but Nava transcription is disabled until separate word alignment is implemented. It is not needed for setup.
+Once packages and models are present, generation uses local-only model loading. Verify offline operation with a short clip before relying on it.
 
-## Using SuperSub
+## Generate, edit and export
 
-### Timeline workspace
+**Automatic — follow speech pauses** is enabled by default. It chooses cue word counts from timestamp gaps of at least **0.45 seconds**; the threshold is adjustable from 0.1–2 seconds. Punctuation and a six-second readability limit also split cues. Turn automatic mode off to use a manual maximum of 1–30 words. Use 1 for word-by-word captions. Glossary hints help recognition but do not guarantee exact spellings.
 
-**Automatic — follow speech pauses** chooses each cue's word count from speech pauses by default. Turn it off to use the manual word limit. Both modes retain punctuation and a six-second readability limit.
+Generation displays a loading screen with phase, elapsed time, progress and cancellation, followed by a completion dialog. Preview conversion happens separately and may take time. Imported media receives a browser-compatible H.264/AAC MP4 preview; original files are unchanged.
 
-Inference uses a disposable child process, CPU INT8, two compute threads and greedy decoding. Audio is streamed in windows of at most 60 seconds, favoring quiet cut points near window ends; global timestamps are retained. This limits memory growth for long files and releases model memory after each job. Chunk boundaries and greedy decoding can change recognition relative to the previous full-audio/beam-search pipeline. If memory is still insufficient, close other running model/server instances and memory-heavy apps, use a system-managed Windows page file, or choose a smaller model. SuperSub does not alter OS memory settings automatically.
+The timeline shows the media track, subtitle blocks and playhead. Click to seek, zoom for precision, drag blocks to move them, or drag edges to trim without crossing adjacent cues. Subtitle text is overlaid on the video during each cue. The overlay is for preview; the app does not export burned-in video.
 
-Subtitles appear over the video and as timed blocks on a scrollable timeline. Click the ruler or a block to seek, adjust zoom for detail, drag a subtitle to move it, or drag its edges to trim. Trims cannot cross neighboring cues. The playhead and overlay follow playback; subtitle text disappears during gaps. This is a preview overlay, not a burned-in video export.
+Text and timing edits autosave. Resolve save errors before leaving. SRT download flushes pending edits and exports the saved cues. Existing projects keep their timings until edited or explicitly regenerated.
 
-Text/timing edits save automatically after a short delay. A save-status indicator reports errors; fix invalid or overlapping times before switching projects. The editor has no Save, Reflow, Add cue, VTT or Text buttons. SRT download and Delete project remain. New project clears the current media, editor and timeline while retaining saved work and model configuration. Projects are listed in a collapsible left panel; selecting one fetches its latest saved cues/settings and rebuilds the timeline and preview. A project remains in history once it has generated subtitles, even if its cues are later removed.
+**New project** clears the workspace without deleting saved work. The left Projects panel can be collapsed independently, and the whole sidebar can be minimized. Selecting a project restores its media, settings, saved subtitles and timeline. History begins after at least one successful generated subtitle; later removing all cues does not remove the project.
 
-New generation automatically splits cues at detected word-timestamp gaps (default 0.45 seconds, configurable from 0.1–2 seconds). Punctuation, maximum words and a six-second duration limit also create boundaries. Existing projects keep their saved timings until explicitly regenerated. Pause quality depends on the recognition model's word alignment; this does not add a separate alignment model.
+## Local files, memory and updates
 
-Generation opens a loading screen with phase, elapsed time and cancellation. The settings panel can be minimized with its arrow button; this preference is remembered. After updating code, stop the server with Ctrl+C, restart Start.cmd and hard-refresh the page (Ctrl+F5). A running server does not reload changes automatically.
+Projects, copied media, preview files and diagnostics live under `data/`. Delete project removes its local folder; the originally selected file outside this folder is untouched. Empty working imports can remain on disk even though they do not appear in history.
 
-The inference pipeline reads FFmpeg-normalized PCM into float32 samples directly. This avoids the faster-whisper 1.2.1 / PyAV 19 `metadata_errors` incompatibility without modifying installed third-party packages.
+Inference runs in a disposable child process using CPU INT8, two threads and greedy decoding. Audio is read in windows of at most 60 seconds, favoring quiet boundaries. This reduces memory growth and releases model memory when the worker exits. Saved results are replaced only after a successful run. Chunk boundaries and greedy decoding may affect recognition; review output before publishing.
 
-The left panel contains settings only. Select media and generate from the central workspace. Generation immediately enters a loading state and reports audio preparation, model loading, speech recognition, and subtitle building. A completion dialog appears when the saved subtitles are ready. Processing percentage is approximate; preparation and loading use an indeterminate indicator.
+To update a cloned installation:
 
-FFmpeg codecs are bundled through imageio-ffmpeg; no system codec pack is required. Imported videos receive a local H.264/AAC MP4 preview (up to 1280 px wide). Preparation can take time for large files; the original file remains unchanged. Seeking and playback use the completed preview. Decode errors appear below the player.
+```powershell
+# Stop the running server with Ctrl+C first.
+git pull --ff-only
+powershell -NoProfile -ExecutionPolicy Bypass -File .\setup.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\start.ps1
+```
 
-History includes projects only after successful generation of at least one subtitle. Empty imports, silent clips, failures and cancellations do not create history entries; previously generated results are preserved on failed retries. Working media can remain in data until deleted. SRT download saves pending edits first. Set maximum words to 1 for word-by-word cues.
-
-Select a video, model, video language and maximum words per cue (default 8). Add optional glossary hints, then generate. Review the video and edit subtitle text or timing. Click a cue's play button or its timeline block to seek. Wait for the save-status indicator before closing the browser; SRT download flushes pending edits automatically.
-
-Cancellation takes effect between processing steps or generated segments. Regeneration replaces existing cues only after confirmation and successful recognition.
-
-Projects and copied media are stored under `data/`. Delete a project in the UI to remove its local copy. Source files selected outside the project folder are untouched.
-
-## What is included
-
-Source code, tests, setup/launch scripts and project context. **`data/`, `assets/`, `models/`, `.venv/`, credentials and caches are excluded from Git.** The interface works without logos. For local branding, optionally place `mansvolve-black.png` and `mansvolve-white.png` in `assets/`.
+Then press **Ctrl+F5** in the browser. With a ZIP installation, extract the update separately and copy local project data only while both apps are stopped. Do not overwrite a working installation with an older data backup.
 
 ## Troubleshooting
 
-- **Python not found:** install Python, enable PATH and reopen the console.
-- **Dependency installation fails:** check internet access and 64-bit Python. For incompatible wheels use Python 3.11 in a fresh checkout or virtual environment.
-- **Model unavailable:** click Locate local model and select its existing folder again. Rerunning setup does not download weights. Optional downloads via `install_models.py` are manual only.
-- **Port in use:** run `start.ps1 -Port 8766`.
-- **Browser does not open:** visit the printed local URL manually. Use `start.ps1 -NoBrowser` when desired.
-- **Preview cannot play:** wait for local preview conversion to finish. If it fails, check the error under the player and try a valid file. Rerun Setup.cmd if bundled FFmpeg is missing.
-- **No speech / transcription error:** check that the input has a supported audio stream. Errors are displayed in the workspace.
+| Problem | What to do |
+| --- | --- |
+| Python missing / installation fails | Install 64-bit Python, enable PATH and reopen the console. Check internet access. Python 3.11 is an alternative if wheels are unavailable for your version. |
+| Model unavailable | Locate its folder again; setup does not fetch weights. |
+| `mkl_malloc` / allocation failure | Close duplicate model/server processes and memory-heavy apps. Keep the Windows page file system-managed or select a smaller model. SuperSub does not change OS settings. |
+| `metadata_errors` | Update and restart the server. The current PCM pipeline bypasses the incompatible PyAV decoder. |
+| Endpoint Not Found after updating | Stop the old server, restart Start.cmd and hard-refresh the browser. |
+| Port 8765 in use | Run `powershell -File .\start.ps1 -Port 8766`. |
+| Browser does not open | Visit the local URL manually. `-NoBrowser` disables automatic opening. |
+| Video does not play | Wait for preview conversion; inspect the message below the player if conversion fails. |
+| No speech / save error | Check that the file has audio; fix invalid or overlapping cue timings. Saved results are preserved on failed retries. |
 
-## Development and status
+## Development and current limits
 
 ```powershell
 .\.venv\Scripts\python.exe -m unittest discover -s tests
-.\.venv\Scripts\python.exe -m py_compile app.py install_models.py
+.\.venv\Scripts\python.exe -m py_compile app.py inference.py media_tools.py local_models.py model_picker.py install_models.py
 .\.venv\Scripts\python.exe -m pip check
+# Optional development-only Node.js checks:
+node --test tests/timeline.test.mjs
+node --check web/app.js
 ```
 
-This is an initial FastAPI/static-web implementation. GPU inference, forced alignment, React/SQLite migration, robust worker cancellation and benchmarked Persian accuracy remain planned. Browser and real-audio inference QA are not yet complete. See [context](context/README.md), [infrastructure](context/infra.md), and [current status](context/current-status.md).
+Verified: **19 Python tests**, **3 Node timeline tests**, DOM checks, FFmpeg conversion, and actual local Turbo inference on an eight-second speech sample. Full browser visual QA, long-video stress testing, offline validation and Persian accuracy benchmarking remain outstanding. GPU inference, separate forced alignment, Nava enablement, batch processing and burned-in export are not implemented. Cancellation terminates inference workers; audio extraction and independent preview conversion can still finish their current step.
+
+Git contains code, scripts, tests and documentation. **Data, assets, models, virtual environments, credentials and caches are excluded.** Optional local logos can be placed in `assets/mansvolve-black.png` and `assets/mansvolve-white.png`.
+
+See [project context](context/README.md), [setup guide](context/setup.md), [infrastructure](context/infra.md) and [current status](context/current-status.md). `requirements.txt` drives installation; `requirements-lock.txt` is the captured original Windows environment, not a cross-platform lock.
