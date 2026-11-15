@@ -51,6 +51,10 @@ This downloads and converts [Givia Persian Turbo](https://huggingface.co/givia/w
 
 ### Timeline workspace
 
+**Automatic — follow speech pauses** chooses each cue's word count from speech pauses by default. Turn it off to use the manual word limit. Both modes retain punctuation and a six-second readability limit.
+
+Inference uses a disposable child process, CPU INT8, two compute threads and greedy decoding. Audio is streamed in windows of at most 60 seconds, favoring quiet cut points near window ends; global timestamps are retained. This limits memory growth for long files and releases model memory after each job. Chunk boundaries and greedy decoding can change recognition relative to the previous full-audio/beam-search pipeline. If memory is still insufficient, close other running model/server instances and memory-heavy apps, use a system-managed Windows page file, or choose a smaller model. SuperSub does not alter OS memory settings automatically.
+
 Subtitles appear over the video and as timed blocks on a scrollable timeline. Click the ruler or a block to seek, adjust zoom for detail, drag a subtitle to move it, or drag its edges to trim. Trims cannot cross neighboring cues. The playhead and overlay follow playback; subtitle text disappears during gaps. This is a preview overlay, not a burned-in video export.
 
 Text/timing edits save automatically after a short delay. A save-status indicator reports errors; fix invalid or overlapping times before switching projects. The editor has no Save, Reflow, Add cue, VTT or Text buttons. SRT download and Delete project remain. New project clears the current media, editor and timeline while retaining saved work and model configuration. Projects are listed in a collapsible left panel; selecting one fetches its latest saved cues/settings and rebuilds the timeline and preview. A project remains in history once it has generated subtitles, even if its cues are later removed.

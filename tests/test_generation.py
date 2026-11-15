@@ -28,7 +28,7 @@ class GenerationTests(unittest.TestCase):
     def test_history_only_after_subtitle_and_exports(self):
         self.assertEqual(app.projects(),[])
         word=SimpleNamespace(word='سلام',start=0,end=1)
-        with patch('faster_whisper.WhisperModel',return_value=self.engine([word])):
+        with patch.object(app.inference,'run_isolated',return_value={'words':[dict(start=0,end=1,word='سلام')],'duration':1}):
             result=app.run(self.pid,dict(model='test',limit=8))
         self.assertEqual(result['status'],'complete')
         self.assertEqual(len(app.projects()),1)
@@ -41,14 +41,21 @@ class GenerationTests(unittest.TestCase):
         app.edit(self.pid,[])
         self.assertEqual(len(app.projects()),1)
     def test_no_speech_not_added_to_history(self):
-        with patch('faster_whisper.WhisperModel',return_value=self.engine([])):
+        with patch.object(app.inference,'run_isolated',return_value={'words':[],'duration':1}):
             result=app.run(self.pid,dict(model='test',limit=8))
         self.assertEqual(result['status'],'empty');self.assertEqual(app.projects(),[])
+    def test_automatic_words_ignores_manual_limit(self):
+        words=[dict(start=i*.5,end=i*.5+.4,word='سلام') for i in range(5)]
+        with patch.object(app.inference,'run_isolated',return_value={'words':words,'duration':3}):
+            app.run(self.pid,dict(model='test',limit=2,automatic_words=True))
+            self.assertEqual(len(app.get_project(self.pid)['cues']),1)
+            app.run(self.pid,dict(model='test',limit=2,automatic_words=False))
+            self.assertEqual(len(app.get_project(self.pid)['cues']),3)
     def test_failed_run_releases_lock(self):
-        with patch('faster_whisper.WhisperModel',side_effect=RuntimeError('bad model')):
+        with patch.object(app.inference,'run_isolated',side_effect=RuntimeError('bad model')):
             result=app.run(self.pid,dict(model='test',limit=8))
         self.assertEqual(result['status'],'failed');self.assertFalse(app.lock.locked())
     def test_cancellation_before_load(self):
-        with patch.object(app.media_tools,'convert',side_effect=lambda *a,**k:app.jobs[self.pid].update(cancel=True)),patch('faster_whisper.WhisperModel') as loader:
+        with patch.object(app.media_tools,'convert',side_effect=lambda *a,**k:app.jobs[self.pid].update(cancel=True)),patch.object(app.inference,'run_isolated') as loader:
             result=app.run(self.pid,dict(model='test',limit=8))
         self.assertEqual(result['status'],'cancelled');loader.assert_not_called()

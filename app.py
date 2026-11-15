@@ -1,5 +1,6 @@
 from pathlib import Path
 import json, uuid, threading, shutil, subprocess, sys
+import inference
 import local_models
 import media_tools
 import math
@@ -144,31 +145,21 @@ def run(pid: str, settings: dict):
     jobs[pid]={'status':'running','phase':'Preparing audio','progress':None,'cancel':False}
     def work():
         try:
-            from faster_whisper import WhisperModel
             value=json.loads((p/'project.json').read_text(encoding='utf-8'))
             audio=p/'audio.wav'
             media_tools.convert(p/value['source'],audio)
             if jobs[pid]['cancel']: jobs[pid]['status']='cancelled'; return
-            jobs[pid]['phase']='Loading model'
-            engine=WhisperModel(entry['path'],device='cpu',compute_type='int8',local_files_only=True)
-            if jobs[pid]['cancel']: jobs[pid]['status']='cancelled'; return
-            jobs[pid]['phase']='Recognizing speech'
-            samples=media_tools.load_audio(audio)
-            segments,info=engine.transcribe(samples,language=settings.get('language') or None,word_timestamps=True,vad_filter=True,initial_prompt=settings.get('glossary') or None)
-            words=[]
-            for seg in segments:
-                if jobs[pid]['cancel']: jobs[pid]['status']='cancelled'; return
-                for w in seg.words or []:
-                    if not w.word.strip(): continue
-                    words.append(dict(start=w.start,end=w.end,word=w.word.strip().replace('ي','ی').replace('ك','ک')))
-                jobs[pid]['progress']=min(99,round(100*seg.end/max(info.duration,.001)))
+            result=inference.run_isolated(p,entry['path'],settings,lambda state:jobs[pid].update(state),lambda:jobs[pid]['cancel'])
+            words=result['words']
             if jobs[pid]['cancel']: jobs[pid]['status']='cancelled'; return
             jobs[pid]['phase']='Building subtitles'
             if not words:
                 jobs[pid].update(status='empty',phase='No speech detected',progress=100)
                 return
-            value.update(words=words,cues=reflow(words,limit,pause),settings=settings,edited=False,generated=True,duration=float(info.duration))
+            value.update(words=words,cues=reflow(words,1000000 if settings.get('automatic_words',True) else limit,pause),settings=settings,edited=False,generated=True,duration=float(result['duration']))
             save(p,value); jobs[pid].update(status='complete',phase='Complete',progress=100)
+        except inference.Cancelled: jobs[pid].update(status='cancelled',phase='Cancelled')
+        except MemoryError: jobs[pid].update(status='failed',error=inference.MEMORY_HELP)
         except Exception as e: jobs[pid].update(status='failed',error=str(e))
         finally:
             try: (p/'audio.wav').unlink(missing_ok=True)

@@ -1,5 +1,11 @@
 # Current status
 
+## Memory protection and automatic word count
+
+Inference now runs in a disposable subprocess with two CPU/MKL/OpenMP threads, CPU INT8, beam/best-of 1 and a bounded PCM reader (up to 60s, quiet-point cuts in the final 8s). Word timestamps are offset back to the original timeline. Parent server polls atomic worker status files and handles native MKL crashes as recoverable errors; cancellation terminates the worker, model memory exits with the process, saved results are replaced only on success. FFmpeg threads are capped at two. Default-on Automatic — follow speech pauses disables the manual word cap; manual mode remains available. Six-second duration and punctuation limits apply to both modes. Old projects without this setting display manual mode when reopened.
+
+Validation: worker process smoke with actual Turbo and silence succeeds; tests cover bounded chunks/timeline continuity, offset restoration, native allocation error reporting, cancellation/cleanup and automatic/manual word-count behavior. Available Windows commit memory was around 2.1GB during diagnosis on a 16GB RAM machine; low-memory settings reduce peak demand but cannot guarantee that any selected large model fits. Chunk cuts and greedy decoding may change recognition and need review on speech at boundaries. Browser visual QA remains pending.
+
 ## Timeline workspace
 
 Added scrollable/zoomable media and subtitle tracks, ruler, synchronized draggable-seek playhead, cue block movement/edge trimming with neighbor constraints, active cue highlighting and on-video text overlay. Project selection fetches saved settings/cues and rebuilds timeline; New project flushes edits then resets media/editor without deleting saved projects. Left sidebar includes independently collapsible Projects, alongside existing sidebar minimization. Save/Reflow/Add cue/VTT/Text controls removed; edits autosave through a serialized queue, flush before navigation/export and report failures. Generated projects remain in history after cue deletion. Generation splits at configurable word-timestamp pauses (0.45s default), punctuation, maximum words and 6s duration; existing cues are preserved unless regenerated.
