@@ -4,6 +4,8 @@ Updated 2026-11-15. This snapshot replaces obsolete chronological implementation
 
 ## Implemented
 
+Playhead-follow editor: entering a cue during playback/seeking selects it in the right panel without rebuilding the timeline. Gaps retain selection. Text/timing focus pauses playback and defers automatic selection until focus leaves; previous/next actions seek before selecting to avoid follow-selection races. DOM checks cover both directions and cue navigation.
+
 Navbar/editor update: project name and generation controls live in the navbar. Browsing is only visible in a new workspace. Once media is selected or a project opens, the right editor is permanently visible with selected-cue fields or an empty state. Escape clears selection; New project restores browsing. Media status/errors stay visible in the footer. DOM interaction and startup checks pass; visual browser verification remains pending.
 
 Latest timeline interaction update: edge/playhead snapping with zoom-aware 8px threshold capped at .35s, visible guide, persistent toggle and Alt bypass. Left/Right moves .1s, Shift+Left/Right moves 1s, Up/Down selects previous/next subtitle start; Space plays/pauses; Enter edits; Escape clears selection. Single-click cue playback is distinguished from double-click editing. Editor is a non-modal right-side workspace panel, inline on small windows, with start/end-at-playhead actions. Trim/move snapping respects adjacent cue limits; pointer cancellation restores the original cue. Autosave and video preview remain live during edits.

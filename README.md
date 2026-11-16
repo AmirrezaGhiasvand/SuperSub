@@ -57,6 +57,8 @@ Once packages and models are present, generation uses local-only model loading. 
 
 ### Model and timeline controls
 
+The editor follows the subtitle under the playhead during playback and seeking. Gaps retain the last selected cue. Focusing a text/timing field pauses playback and keeps that field stable while editing; following resumes after focus leaves the field.
+
 Timeline snapping is on by default. Click near a subtitle start/end to snap the playhead; drag a subtitle or its trim edges near neighboring boundaries or the paused playhead to snap. A guide marks the snap target. Toggle **Snap on/off** or hold **Alt** while dragging to bypass it. Keyboard navigation: **Left/Right** moves the playhead 0.1s, **Shift+Left/Right** moves 1s, and **Up/Down** jumps to the previous/next subtitle start; **Space** toggles playback. Inputs keep their normal typing behavior.
 
 The navbar holds the project name and Generate/Cancel controls. Browse is shown only for a new workspace; after selecting media or opening a project, the right-side editor stays open by default, including an empty state before generation. Single-click a subtitle to play/select it; double-click or Enter selects it for editing. Escape clears the selection without hiding the panel. New project restores browsing. Its **Start/End at playhead** buttons align edges precisely, within neighboring-cue constraints. The editor is non-modal and never covers the video.
