@@ -8,6 +8,15 @@ from fastapi import FastAPI, UploadFile, HTTPException
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 
+class FreshStaticFiles(StaticFiles):
+    def is_not_modified(self, response_headers, request_headers):
+        return False
+    async def get_response(self, path, scope):
+        response=await super().get_response(path,scope)
+        if path.endswith(('.js','.mjs')):response.headers['content-type']='text/javascript; charset=utf-8'
+        response.headers['cache-control']='no-store'
+        return response
+
 ROOT = Path(__file__).parent
 DATA = ROOT / 'data'
 DATA.mkdir(exist_ok=True)
@@ -19,6 +28,9 @@ previews = {}
 @app.get('/api/health')
 def health():
     return {'app':'SuperSub','version':'studio-2'}
+
+@app.get('/favicon.ico',include_in_schema=False)
+def favicon():return Response(status_code=204)
 
 def ensure_idle(pid):
     if jobs.get(pid,{}).get('status')=='running':
@@ -245,4 +257,4 @@ def export_text(pid: str):
     return Response('\n'.join(c['text'] for c in v['cues'])+'\n',media_type='text/plain')
 
 app.mount('/assets',StaticFiles(directory=ROOT/'assets', check_dir=False),name='assets')
-app.mount('/',StaticFiles(directory=ROOT/'web',html=True),name='web')
+app.mount('/',FreshStaticFiles(directory=ROOT/'web',html=True),name='web')

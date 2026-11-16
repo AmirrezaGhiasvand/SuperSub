@@ -1,4 +1,4 @@
-import {clamp,activeCue,moveCue,shiftCues} from './timeline.mjs';
+import {clamp,activeCue,moveCue,shiftCues} from './timeline.mjs?v=studio-3';
 const $=id=>document.getElementById(id);
 let current=null,busy=false,dirty=false,selectedFile=null,blob=null,previewToken=0;
 const delay=ms=>new Promise(r=>setTimeout(r,ms));

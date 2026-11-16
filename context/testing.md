@@ -4,11 +4,11 @@
 .\.venv\Scripts\python.exe -m unittest discover -s tests
 .\.venv\Scripts\python.exe -m py_compile app.py inference.py media_tools.py local_models.py model_picker.py install_models.py
 .\.venv\Scripts\python.exe -m pip check
-node --test tests/timeline.test.mjs
+node --experimental-vm-modules --test tests/startup.test.mjs tests/timeline.test.mjs
 node --check web/app.js
 ```
 
-Node.js is development-only. Latest verified: 24 Python tests and 4 Node tests. Covers model registration, pause/duration limits, automatic/manual grouping, history/export/persistence, worker failure/cancellation, bounded chunks/offsets, native allocation error reporting, real FFmpeg conversion and timeline geometry/overlay gaps.
+Node.js is development-only. Latest verified: 26 Python tests and 6 Node tests. Covers model registration, pause/duration limits, automatic/manual grouping, history/export/persistence, worker failure/cancellation, bounded chunks/offsets, native allocation error reporting, real FFmpeg conversion and timeline geometry/overlay gaps.
 
 Additional local DOM checks passed autosave serialization, reset, project reopening/settings and removed controls. The harness lives in ignored .tools/ and is not part of portable tests. Actual Turbo passed silence and an eight-second existing-media sample (11 timed words); no accuracy score is claimed.
 

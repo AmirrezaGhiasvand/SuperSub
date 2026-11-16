@@ -113,11 +113,11 @@ Then press **Ctrl+F5** in the browser. With a ZIP installation, extract the upda
 .\.venv\Scripts\python.exe -m py_compile app.py inference.py media_tools.py local_models.py model_picker.py install_models.py
 .\.venv\Scripts\python.exe -m pip check
 # Optional development-only Node.js checks:
-node --test tests/timeline.test.mjs
+node --experimental-vm-modules --test tests/startup.test.mjs tests/timeline.test.mjs
 node --check web/app.js
 ```
 
-Verified: **24 Python tests**, **4 Node timeline tests**, DOM checks, FFmpeg conversion, and actual local Turbo inference on an eight-second speech sample. Full browser visual QA, long-video stress testing, offline validation and Persian accuracy benchmarking remain outstanding. GPU inference, separate forced alignment, Nava enablement, batch processing and burned-in export are not implemented. Cancellation terminates inference workers; audio extraction and independent preview conversion can still finish their current step.
+Verified: **26 Python tests**, **6 Node startup/timeline tests**, DOM checks, FFmpeg conversion, and actual local Turbo inference on an eight-second speech sample. Full browser visual QA, long-video stress testing, offline validation and Persian accuracy benchmarking remain outstanding. GPU inference, separate forced alignment, Nava enablement, batch processing and burned-in export are not implemented. Cancellation terminates inference workers; audio extraction and independent preview conversion can still finish their current step.
 
 Git contains code, scripts, tests and documentation. **Data, assets, models, virtual environments, credentials and caches are excluded.** Optional local logos can be placed in `assets/mansvolve-black.png` and `assets/mansvolve-white.png`.
 
