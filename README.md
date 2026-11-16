@@ -57,6 +57,8 @@ Once packages and models are present, generation uses local-only model loading. 
 
 ### Model and timeline controls
 
+The desktop workspace fits the viewport with a compact 16:9 preview beside media/generation controls, an unchanged full-height timeline, and a compact export footer. Long settings scroll inside the sidebar. Narrow or short windows retain normal page flow so controls remain accessible. Buttons use flat surfaces, restrained borders and clear hover/focus states.
+
 Use **Load model** to keep the selected model ready in a separate process; **Unload** releases its process and model memory. Generation reuses a matching loaded model. With no loaded model, generation still loads temporarily and releases it afterward. Wait for loading to finish, and unload or switch models before generating with a different selection. Loading/unloading is blocked during generation; cancelling a resident job unloads that worker. Keeping a model loaded consumes memory until explicitly unloaded or the server exits.
 
 The expanded timeline is the subtitle editor. Click a block to open text, start/end, previous/next, playback and cue deletion controls. Edits autosave. There is no bottom subtitle list. Global **Shift all forward/backward** adjusts saved cue times by the chosen number of seconds, updates playback captions and SRT, and preserves spacing/durations; backward shifts stop at time zero.

@@ -4,6 +4,8 @@ Updated 2026-11-15. This snapshot replaces obsolete chronological implementation
 
 ## Implemented
 
+Compact desktop pass: viewport-height workspace, smaller 16:9 preview alongside media controls, unchanged timeline height, tight toolbars/footer and internally scrolling settings. Flat minimal button styling replaces raised gradients/hover motion. Small/short windows retain normal scrolling for access. DOM interaction checks pass; real-browser viewport layout verification remains pending because the browser host is unavailable.
+
 Frontend startup hotfix: a cached unversioned timeline.mjs lacked shiftCues and prevented the entire app module from initializing. The geometry import is now versioned, a classic bootstrap dynamically fetches a fresh entry module and surfaces import failures, and frontend responses use explicit JavaScript MIME/no-store without 304 reuse. Added real module-linkage and HTTP static-response regression tests. favicon.ico returns 204 to avoid unrelated console noise. Browser console evidence confirmed the stale-module failure.
 
 Latest studio update (2026-11-16): explicit model load/status/unload with a persistent isolated worker, matching-model reuse and release on unload/cancel/server shutdown. Generation without a loaded model remains disposable. The larger timeline owns click-to-edit cue dialogs; the bottom subtitle list is removed. Added autosaved global forward/backward shifts, fixed 16:9 letterboxed playback, native captions for fullscreen and a contrasted charcoal palette/button system. Timestamp-aware audio resampling preserves delayed-stream leading silence; preview caches are versioned. Existing project timings require manual shift/regeneration rather than silent migration.
