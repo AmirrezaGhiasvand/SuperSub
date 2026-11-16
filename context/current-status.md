@@ -4,9 +4,9 @@ Updated 2026-11-15. This snapshot replaces obsolete chronological implementation
 
 ## Implemented
 
-Latest editor placement: cue editing reuses the browse/generate slot as an overlay without resizing the preview or timeline. Background media controls become inert while the editor is open; closing restores them. DOM interaction and startup checks pass; visual browser verification remains pending.
+Navbar/editor update: project name and generation controls live in the navbar. Browsing is only visible in a new workspace. Once media is selected or a project opens, the right editor is permanently visible with selected-cue fields or an empty state. Escape clears selection; New project restores browsing. Media status/errors stay visible in the footer. DOM interaction and startup checks pass; visual browser verification remains pending.
 
-Latest timeline interaction update: edge/playhead snapping with zoom-aware 8px threshold capped at .35s, visible guide, persistent toggle and Alt bypass. Left/Right navigates boundaries; Shift arrows nudge .1s; Space plays/pauses; Enter edits; Escape closes. Single-click cue playback is distinguished from double-click editing. Editor is a non-modal right-side workspace panel, inline on small windows, with start/end-at-playhead actions. Trim/move snapping respects adjacent cue limits; pointer cancellation restores the original cue. Autosave and video preview remain live during edits.
+Latest timeline interaction update: edge/playhead snapping with zoom-aware 8px threshold capped at .35s, visible guide, persistent toggle and Alt bypass. Left/Right moves .1s, Shift+Left/Right moves 1s, Up/Down selects previous/next subtitle start; Space plays/pauses; Enter edits; Escape clears selection. Single-click cue playback is distinguished from double-click editing. Editor is a non-modal right-side workspace panel, inline on small windows, with start/end-at-playhead actions. Trim/move snapping respects adjacent cue limits; pointer cancellation restores the original cue. Autosave and video preview remain live during edits.
 
 Latest layout adjustment: removed the video-name lane and reduced the subtitle timeline to 180px to increase preview space. Native captions use 50% horizontal/vertical coordinates with centered line alignment, and the HTML fallback is centered too. This applies to normal/fullscreen playback.
 
@@ -39,3 +39,5 @@ Browser preview tooling failed to initialize: real-browser visual/responsive/acc
 Preview conversion and audio extraction can finish their current step after cancellation; restart does not resume active jobs. Empty imports may remain on disk outside history. No batch queue, GPU inference, forced alignment/Nava inference, burned-in export, full language list or system-theme mode.
 
 Runtime is FastAPI/static JavaScript and JSON persistence. React/TypeScript/Tailwind/SQLite were original plan choices, not shipped prerequisites. Assets/data/models are excluded from Git.
+
+Brand update: refreshed against the linked Mansvolve source with monochrome cards, pill buttons, subtle dots and yellow accents. Bundled Inter/Vazirmatn/Martian Mono variable fonts and OFL licenses under web/fonts. DOM checks cover navbar controls, hidden browsing, default-open editor and revised keyboard navigation. Full visual browser QA remains pending.

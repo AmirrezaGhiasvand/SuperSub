@@ -57,9 +57,9 @@ Once packages and models are present, generation uses local-only model loading. 
 
 ### Model and timeline controls
 
-Timeline snapping is on by default. Click near a subtitle start/end to snap the playhead; drag a subtitle or its trim edges near neighboring boundaries or the paused playhead to snap. A guide marks the snap target. Toggle **Snap on/off** or hold **Alt** while dragging to bypass it. Boundary navigation: **Left/Right** moves to the previous/next cue edge; **Shift+Left/Right** nudges 0.1s; **Space** toggles playback. Inputs keep their normal typing behavior.
+Timeline snapping is on by default. Click near a subtitle start/end to snap the playhead; drag a subtitle or its trim edges near neighboring boundaries or the paused playhead to snap. A guide marks the snap target. Toggle **Snap on/off** or hold **Alt** while dragging to bypass it. Keyboard navigation: **Left/Right** moves the playhead 0.1s, **Shift+Left/Right** moves 1s, and **Up/Down** jumps to the previous/next subtitle start; **Space** toggles playback. Inputs keep their normal typing behavior.
 
-Single-click a subtitle to play from its start. Double-click (or press **Enter** on a focused cue) to open its autosaving editor over the browse/generate area beside the preview. The player and timeline keep their size. **Escape** closes the editor and restores import/generation controls. Its **Start/End at playhead** buttons align edges precisely, within neighboring-cue constraints. The editor is non-modal and never covers the video.
+The navbar holds the project name and Generate/Cancel controls. Browse is shown only for a new workspace; after selecting media or opening a project, the right-side editor stays open by default, including an empty state before generation. Single-click a subtitle to play/select it; double-click or Enter selects it for editing. Escape clears the selection without hiding the panel. New project restores browsing. Its **Start/End at playhead** buttons align edges precisely, within neighboring-cue constraints. The editor is non-modal and never covers the video.
 
 The desktop workspace fits the viewport with a compact 16:9 preview beside media/generation controls, a compact subtitle-only timeline, and a compact export footer. Long settings scroll inside the sidebar. Narrow or short windows retain normal page flow so controls remain accessible. Buttons use flat surfaces, restrained borders and clear hover/focus states.
 
@@ -128,3 +128,7 @@ Verified: **26 Python tests**, **10 Node startup/timeline tests**, DOM checks, F
 Git contains code, scripts, tests and documentation. **Data, assets, models, virtual environments, credentials and caches are excluded.** Optional local logos can be placed in `assets/mansvolve-black.png` and `assets/mansvolve-white.png`.
 
 See [project context](context/README.md), [setup guide](context/setup.md), [infrastructure](context/infra.md) and [current status](context/current-status.md). `requirements.txt` drives installation; `requirements-lock.txt` is the captured original Windows environment, not a cross-platform lock.
+
+## Brand typography
+
+The UI follows the Mansvolve site’s monochrome panels, white/black pill buttons, dotted texture and yellow timeline accent. Inter provides crisp English UI text, Vazirmatn supports Persian and Martian Mono labels time/navigation. Fonts and their SIL Open Font Licenses are bundled under web/fonts/; no runtime Google Fonts connection is required.

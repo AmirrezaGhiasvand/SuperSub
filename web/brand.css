@@ -1,0 +1,50 @@
+@font-face{font-family:Inter;src:url('/fonts/inter.ttf') format('truetype');font-weight:100 900;font-display:swap}
+@font-face{font-family:Vazirmatn;src:url('/fonts/vazirmatn.ttf') format('truetype');font-weight:100 900;font-display:swap}
+@font-face{font-family:'Martian Mono';src:url('/fonts/martianmono.ttf') format('truetype');font-weight:100 800;font-stretch:75% 112.5%;font-display:swap}
+:root{--bg:#080808;--panel:#131313;--raised:#202020;--line:#343434;--text:#fafafa;--muted:#aaa;--accent:#fff}
+body.light{--bg:#f2f2f2;--panel:#fff;--raised:#ededed;--line:#d0d0d0;--text:#111;--muted:#666;--accent:#000}
+body{font-family:Inter,Vazirmatn,sans-serif;background:var(--bg);letter-spacing:-.015em;-webkit-font-smoothing:antialiased}
+::selection{background:#ddd;color:#000}
+header{background:var(--bg);border-color:var(--line);gap:16px}
+header h1{font-size:20px;font-weight:850;letter-spacing:-.055em}
+header small,.nav-project>span,#timecode,#ruler{font-family:'Martian Mono',Vazirmatn,monospace;font-size:9px;letter-spacing:.04em}
+.nav-project{min-width:0;flex:1;padding-left:18px;border-left:1px solid var(--line)}
+.nav-project>span{display:block;color:var(--muted);font-size:8px;margin-bottom:2px}
+.nav-project h2{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:550;margin:0}
+header .generation-actions{margin:0;flex-shrink:0;align-items:center}
+header .generation-actions button{white-space:nowrap;font-size:11px;padding:8px 16px;min-height:32px}
+header #theme{margin-left:0;font-size:11px}
+section,aside{background:var(--panel);border-color:var(--line);border-radius:20px}
+.preview-surface{background-color:#080808;background-image:radial-gradient(#ffffff08 1px,transparent 1px);background-size:24px 24px;border-color:#252525}
+button{font-family:Inter,Vazirmatn,sans-serif;border-radius:999px;background:transparent;border:1px solid var(--line);box-shadow:none;letter-spacing:-.01em;font-weight:550}
+button:hover:not(:disabled){background:var(--text);color:var(--bg);border-color:var(--text);transform:none}
+button:active:not(:disabled){background:var(--raised);color:var(--text);transform:none}
+.primary,#load-model,#download,#snap-toggle[aria-pressed=true]{background:var(--text);color:var(--bg);border-color:var(--text);font-weight:650}
+.primary:hover:not(:disabled),#load-model:hover:not(:disabled),#download:hover:not(:disabled){background:#d5d5d5;color:#000;border-color:#d5d5d5}
+body.light .primary:hover:not(:disabled),body.light #load-model:hover:not(:disabled),body.light #download:hover:not(:disabled){background:#333;color:#fff;border-color:#333}
+button:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--text);outline-offset:3px}
+input,select,textarea{font-family:Inter,Vazirmatn,sans-serif;background:var(--bg);border-color:var(--line);border-radius:12px}
+#inspector-text{font-family:Vazirmatn,Inter,sans-serif;font-weight:450}
+.preview-row{grid-template-columns:minmax(0,1fr) 250px}
+.media-slot>#cue-inspector.side-editor{background:var(--panel);border-color:var(--line);border-radius:16px;padding:14px}
+#cue-inspector.side-editor textarea{height:110px;min-height:90px;font-size:18px}
+#inspector-empty{color:var(--muted);line-height:1.8;padding:20px 0}
+#timeline-scroll{background:#0b0b0b;border-color:var(--line)}
+#ruler{background:#191919;color:#aaa;border-color:#333}
+#subtitle-lane{border-color:#333;background:#ffffff02}
+.timeline-cue{background:#292929;color:#eee;border-color:#4d4d4d;font-family:Vazirmatn,Inter,sans-serif}
+.timeline-cue.active{background:#ddd;color:#111;outline:2px solid #fff}
+.trim{background:#ffffff22}
+#playhead,#snap-guide{background:#f5ed03;color:#f5ed03}
+#playhead::before{color:#f5ed03}
+#snap-guide{box-shadow:0 0 4px #f5ed0388}
+.footer-status{min-width:0;display:flex;flex-direction:column;gap:1px;font-size:10px}
+.footer-status #message{padding:0;max-height:28px;overflow:auto;font-size:11px;line-height:14px}
+.footer-status #playback{margin:0;font-size:9px;color:var(--muted)}
+.footer-status #generation{display:none}
+
+#remove,.danger{color:#d99b9b}
+#remove:hover:not(:disabled),.danger:hover:not(:disabled){background:#392326;color:#ffd4d4;border-color:#65363c}
+video::cue{font-family:Vazirmatn,Inter,sans-serif}
+body.light #timeline-scroll{background:#f0f0f0}body.light #ruler{background:#e4e4e4;color:#555}
+@media(max-width:900px),(max-height:699px){header{flex-wrap:wrap;padding:12px}.nav-project{flex:1;min-width:150px}header .generation-actions{margin-left:auto}.preview-row{grid-template-columns:1fr}.media-slot{min-height:310px}.media-slot>.media-actions{min-height:310px}}
