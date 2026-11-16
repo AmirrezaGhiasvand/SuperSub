@@ -18,7 +18,7 @@ previews = {}
 
 @app.get('/api/health')
 def health():
-    return {'app':'SuperSub','version':'timeline-1'}
+    return {'app':'SuperSub','version':'studio-2'}
 
 def ensure_idle(pid):
     if jobs.get(pid,{}).get('status')=='running':
@@ -30,7 +30,7 @@ def prepare_preview(pid, p, source):
         temporary=p/'preview.partial.mp4'
         try:
             media_tools.convert(source,temporary,preview=True)
-            temporary.replace(p/'preview.mp4')
+            temporary.replace(p/'preview-v2.mp4')
             previews[pid]={'status':'ready'}
         except Exception as e:
             previews[pid]={'status':'failed','error':str(e)}
@@ -64,6 +64,24 @@ def reflow(words, limit, pause=.45):
 @app.get('/api/models')
 def models():
     return [dict(id=k, name=v['name'], path=v['path'], profile=v['profile'], ready=local_models.valid_folder(Path(v['path'])), experimental=v['profile']!='multilingual') for k,v in local_models.catalog().items()]
+
+@app.get('/api/models/status')
+def model_status():return inference.resident.status()
+
+@app.post('/api/models/load')
+def load_model(body: dict):
+    if not lock.acquire(False):raise HTTPException(409,'Wait for generation before changing models.')
+    try:
+        entry=local_models.catalog().get(body.get('model'))
+        if not entry or entry['profile']=='nava' or not local_models.valid_folder(Path(entry['path'])):raise HTTPException(400,'Select a supported local model.')
+        return inference.resident.load(entry['path'],DATA/'model-runtime')
+    finally:lock.release()
+
+@app.post('/api/models/unload')
+def unload_model():
+    if not lock.acquire(False):raise HTTPException(409,'Cancel generation before unloading the model.')
+    try:return inference.resident.unload()
+    finally:lock.release()
 
 @app.post('/api/models/register')
 def register_model(body: dict):
@@ -99,7 +117,7 @@ def get_project(pid: str):
 @app.get('/api/projects/{pid}/preview')
 def preview_status(pid: str):
     p=project(pid)
-    if (p/'preview.mp4').exists(): return {'status':'ready'}
+    if (p/'preview-v2.mp4').exists(): return {'status':'ready'}
     if pid not in previews:
         v=get_project(pid); prepare_preview(pid,p,p/v['source'])
     return previews[pid]
@@ -119,7 +137,7 @@ def upload(file: UploadFile):
 @app.get('/api/projects/{pid}/media')
 def media(pid: str):
     p=project(pid); value=json.loads((p/'project.json').read_text(encoding='utf-8'))
-    return FileResponse(p/'preview.mp4' if (p/'preview.mp4').exists() else p/value['source'])
+    return FileResponse(p/'preview-v2.mp4' if (p/'preview-v2.mp4').exists() else p/value['source'])
 
 @app.delete('/api/projects/{pid}')
 def delete(pid: str):
@@ -141,6 +159,9 @@ def run(pid: str, settings: dict):
     if entry['profile']=='nava': raise HTTPException(400,'Nava requires validated forced alignment; experimental transcription is disabled.')
     if entry['profile']=='persian' and settings.get('language')!='fa': raise HTTPException(400,'Select Persian for this model')
     if not local_models.valid_folder(Path(entry['path'])): raise HTTPException(400,'Local model unavailable. Locate its folder again.')
+    model_state=inference.resident.status()
+    if model_state['status']=='loading':raise HTTPException(409,'The model is still loading. Wait for Loaded before generating.')
+    if model_state['status']=='loaded' and not inference.resident.matches(entry['path']):raise HTTPException(409,'Unload the current model or load the selected model first.')
     if not lock.acquire(False): raise HTTPException(409,'Another transcription is running')
     jobs[pid]={'status':'running','phase':'Preparing audio','progress':None,'cancel':False}
     def work():

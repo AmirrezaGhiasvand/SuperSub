@@ -4,6 +4,10 @@ Updated 2026-11-15. This snapshot replaces obsolete chronological implementation
 
 ## Implemented
 
+Latest studio update (2026-11-16): explicit model load/status/unload with a persistent isolated worker, matching-model reuse and release on unload/cancel/server shutdown. Generation without a loaded model remains disposable. The larger timeline owns click-to-edit cue dialogs; the bottom subtitle list is removed. Added autosaved global forward/backward shifts, fixed 16:9 letterboxed playback, native captions for fullscreen and a contrasted charcoal palette/button system. Timestamp-aware audio resampling preserves delayed-stream leading silence; preview caches are versioned. Existing project timings require manual shift/regeneration rather than silent migration.
+
+Validation for this update: actual installed Turbo loaded, was reused for inference in the same process, and unloaded successfully. Added delayed-audio fixture, global-shift tests, model lifecycle tests and DOM checks for native caption tracks/inspector/fullscreen target. Real browser fullscreen/visual QA remains unverified; model alignment quality remains variable.
+
 - Windows dependency-only setup/launch scripts; no automatic model download, local model picker/path entry, optional manual download helper.
 - English light/dark UI with minimized sidebar and independently collapsible Projects.
 - Local media import, bundled FFmpeg H.264/AAC preview conversion and mono PCM extraction.
@@ -15,7 +19,7 @@ Updated 2026-11-15. This snapshot replaces obsolete chronological implementation
 
 ## Validation
 
-19 Python tests and 3 Node timeline tests pass. DOM checks cover overlay gaps, serialized autosave, reset, project restoration/settings and removed controls. Actual FFmpeg conversion/audio extraction passed. Installed Turbo passed isolated silence and an eight-second speech sample producing 11 timed words. This confirms operation, not accuracy or long-file reliability.
+24 Python tests and 4 Node timeline tests pass. DOM checks cover overlay gaps, serialized autosave, reset, project restoration/settings and removed controls. Actual FFmpeg conversion/audio extraction passed. Installed Turbo passed isolated silence and an eight-second speech sample producing 11 timed words. This confirms operation, not accuracy or long-file reliability.
 
 ## Remaining
 

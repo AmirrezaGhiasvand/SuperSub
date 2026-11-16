@@ -55,6 +55,16 @@ Once packages and models are present, generation uses local-only model loading. 
 
 ## Generate, edit and export
 
+### Model and timeline controls
+
+Use **Load model** to keep the selected model ready in a separate process; **Unload** releases its process and model memory. Generation reuses a matching loaded model. With no loaded model, generation still loads temporarily and releases it afterward. Wait for loading to finish, and unload or switch models before generating with a different selection. Loading/unloading is blocked during generation; cancelling a resident job unloads that worker. Keeping a model loaded consumes memory until explicitly unloaded or the server exits.
+
+The expanded timeline is the subtitle editor. Click a block to open text, start/end, previous/next, playback and cue deletion controls. Edits autosave. There is no bottom subtitle list. Global **Shift all forward/backward** adjusts saved cue times by the chosen number of seconds, updates playback captions and SRT, and preserves spacing/durations; backward shifts stop at time zero.
+
+The player uses a fixed 16:9 frame with letterboxing rather than stretching source video. Native caption tracks keep subtitles visible in native video fullscreen; the Fullscreen button also expands the whole player. The dark palette uses distinct background, panel and raised-control shades, with consistent button states and focus outlines.
+
+New audio extraction and preview conversion preserve delayed-audio leading silence through timestamp-aware resampling. New preview caches use preview-v2.mp4. Existing saved subtitle times are not silently rewritten: regenerate or use the global shift controls where needed. Model word alignment can still be imperfect; this is not a forced-alignment guarantee.
+
 **Automatic — follow speech pauses** is enabled by default. It chooses cue word counts from timestamp gaps of at least **0.45 seconds**; the threshold is adjustable from 0.1–2 seconds. Punctuation and a six-second readability limit also split cues. Turn automatic mode off to use a manual maximum of 1–30 words. Use 1 for word-by-word captions. Glossary hints help recognition but do not guarantee exact spellings.
 
 Generation displays a loading screen with phase, elapsed time, progress and cancellation, followed by a completion dialog. Preview conversion happens separately and may take time. Imported media receives a browser-compatible H.264/AAC MP4 preview; original files are unchanged.
@@ -69,7 +79,7 @@ Text and timing edits autosave. Resolve save errors before leaving. SRT download
 
 Projects, copied media, preview files and diagnostics live under `data/`. Delete project removes its local folder; the originally selected file outside this folder is untouched. Empty working imports can remain on disk even though they do not appear in history.
 
-Inference runs in a disposable child process using CPU INT8, two threads and greedy decoding. Audio is read in windows of at most 60 seconds, favoring quiet boundaries. This reduces memory growth and releases model memory when the worker exits. Saved results are replaced only after a successful run. Chunk boundaries and greedy decoding may affect recognition; review output before publishing.
+Inference runs in a separate process using CPU INT8, two threads and greedy decoding. It is disposable by default; explicit Load model keeps it resident until unloading. Audio is read in windows of at most 60 seconds, favoring quiet boundaries. This reduces memory growth and releases model memory when the worker exits. Saved results are replaced only after a successful run. Chunk boundaries and greedy decoding may affect recognition; review output before publishing.
 
 To update a cloned installation:
 
@@ -107,7 +117,7 @@ node --test tests/timeline.test.mjs
 node --check web/app.js
 ```
 
-Verified: **19 Python tests**, **3 Node timeline tests**, DOM checks, FFmpeg conversion, and actual local Turbo inference on an eight-second speech sample. Full browser visual QA, long-video stress testing, offline validation and Persian accuracy benchmarking remain outstanding. GPU inference, separate forced alignment, Nava enablement, batch processing and burned-in export are not implemented. Cancellation terminates inference workers; audio extraction and independent preview conversion can still finish their current step.
+Verified: **24 Python tests**, **4 Node timeline tests**, DOM checks, FFmpeg conversion, and actual local Turbo inference on an eight-second speech sample. Full browser visual QA, long-video stress testing, offline validation and Persian accuracy benchmarking remain outstanding. GPU inference, separate forced alignment, Nava enablement, batch processing and burned-in export are not implemented. Cancellation terminates inference workers; audio extraction and independent preview conversion can still finish their current step.
 
 Git contains code, scripts, tests and documentation. **Data, assets, models, virtual environments, credentials and caches are excluded.** Optional local logos can be placed in `assets/mansvolve-black.png` and `assets/mansvolve-white.png`.
 
