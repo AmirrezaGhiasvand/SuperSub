@@ -69,3 +69,22 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto}
 /* Center both fallback overlay and native percentage-positioned captions. */
 #video-subtitle{top:50%;bottom:auto;transform:translateY(-50%);text-align:center}
 #subtitle-lane{margin-top:10px}
+/* Non-modal cue inspector shares the workspace with the live preview. */
+#cue-inspector.side-editor[hidden]{display:none}
+#cue-inspector.side-editor{width:auto;min-width:0;min-height:0;padding:14px;background:var(--raised);border:1px solid var(--line);border-radius:12px;overflow:auto;box-sizing:border-box}
+.workspace.inspector-open{grid-template-columns:minmax(0,1fr) 280px}
+.workspace>.preview-row,.workspace>.timeline-controls,.workspace>#timeline-scroll,.workspace>.workspace-footer{grid-column:1}
+.workspace>#cue-inspector{grid-column:2;grid-row:1 / -1}
+#cue-inspector.side-editor textarea{font-size:18px;min-height:130px;resize:vertical}
+#cue-inspector .inspector-header h2{font-size:15px}
+#cue-inspector .inspector-times{gap:8px}
+#cue-inspector label{font-size:11px;margin-top:14px;min-width:0}
+#cue-inspector input{padding:8px;min-width:0}
+#cue-inspector button{font-size:11px;padding:7px 9px}
+.playhead-actions{display:flex;gap:6px;margin-top:10px}
+#snap-toggle[aria-pressed=true]{background:#cbdaf1;color:#142238;border-color:transparent}
+#snap-guide{position:absolute;top:0;bottom:0;width:1px;background:#78e0c3;pointer-events:none;z-index:4;box-shadow:0 0 5px #78e0c3}
+.timeline-cue{touch-action:none}
+#timeline-scroll{touch-action:pan-x}
+@media(min-width:901px) and (max-width:1350px){.workspace.inspector-open .preview-row{grid-template-columns:1fr}.workspace.inspector-open .media-actions{display:none}}
+@media(max-width:900px),(max-height:699px){.workspace.inspector-open{grid-template-columns:minmax(0,1fr)}.workspace>#cue-inspector{grid-column:1;grid-row:auto;max-height:400px}.workspace>.workspace-footer{grid-column:1}}

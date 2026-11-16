@@ -57,11 +57,15 @@ Once packages and models are present, generation uses local-only model loading. 
 
 ### Model and timeline controls
 
+Timeline snapping is on by default. Click near a subtitle start/end to snap the playhead; drag a subtitle or its trim edges near neighboring boundaries or the paused playhead to snap. A guide marks the snap target. Toggle **Snap on/off** or hold **Alt** while dragging to bypass it. Boundary navigation: **Left/Right** moves to the previous/next cue edge; **Shift+Left/Right** nudges 0.1s; **Space** toggles playback. Inputs keep their normal typing behavior.
+
+Single-click a subtitle to play from its start. Double-click (or press **Enter** on a focused cue) to open its autosaving editor on the right, alongside the preview. **Escape** closes the editor. Its **Start/End at playhead** buttons align edges precisely, within neighboring-cue constraints. The panel is non-modal; narrow windows place it inline so it does not cover the preview.
+
 The desktop workspace fits the viewport with a compact 16:9 preview beside media/generation controls, a compact subtitle-only timeline, and a compact export footer. Long settings scroll inside the sidebar. Narrow or short windows retain normal page flow so controls remain accessible. Buttons use flat surfaces, restrained borders and clear hover/focus states.
 
 Use **Load model** to keep the selected model ready in a separate process; **Unload** releases its process and model memory. Generation reuses a matching loaded model. With no loaded model, generation still loads temporarily and releases it afterward. Wait for loading to finish, and unload or switch models before generating with a different selection. Loading/unloading is blocked during generation; cancelling a resident job unloads that worker. Keeping a model loaded consumes memory until explicitly unloaded or the server exits.
 
-The expanded timeline is the subtitle editor. Click a block to open text, start/end, previous/next, playback and cue deletion controls. Edits autosave. There is no bottom subtitle list. Global **Shift all forward/backward** adjusts saved cue times by the chosen number of seconds, updates playback captions and SRT, and preserves spacing/durations; backward shifts stop at time zero.
+The expanded timeline is the subtitle editor. Double-click a block to open text, start/end, previous/next, playback and cue deletion controls. Edits autosave. There is no bottom subtitle list. Global **Shift all forward/backward** adjusts saved cue times by the chosen number of seconds, updates playback captions and SRT, and preserves spacing/durations; backward shifts stop at time zero.
 
 The player uses a fixed 16:9 frame with letterboxing rather than stretching source video. Native caption tracks keep subtitles visible in native video fullscreen; the Fullscreen button also expands the whole player. The dark palette uses distinct background, panel and raised-control shades, with consistent button states and focus outlines.
 
@@ -119,7 +123,7 @@ node --experimental-vm-modules --test tests/startup.test.mjs tests/timeline.test
 node --check web/app.js
 ```
 
-Verified: **26 Python tests**, **6 Node startup/timeline tests**, DOM checks, FFmpeg conversion, and actual local Turbo inference on an eight-second speech sample. Full browser visual QA, long-video stress testing, offline validation and Persian accuracy benchmarking remain outstanding. GPU inference, separate forced alignment, Nava enablement, batch processing and burned-in export are not implemented. Cancellation terminates inference workers; audio extraction and independent preview conversion can still finish their current step.
+Verified: **26 Python tests**, **10 Node startup/timeline tests**, DOM checks, FFmpeg conversion, and actual local Turbo inference on an eight-second speech sample. Full browser visual QA, long-video stress testing, offline validation and Persian accuracy benchmarking remain outstanding. GPU inference, separate forced alignment, Nava enablement, batch processing and burned-in export are not implemented. Cancellation terminates inference workers; audio extraction and independent preview conversion can still finish their current step.
 
 Git contains code, scripts, tests and documentation. **Data, assets, models, virtual environments, credentials and caches are excluded.** Optional local logos can be placed in `assets/mansvolve-black.png` and `assets/mansvolve-white.png`.
 

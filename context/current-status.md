@@ -4,6 +4,8 @@ Updated 2026-11-15. This snapshot replaces obsolete chronological implementation
 
 ## Implemented
 
+Latest timeline interaction update: edge/playhead snapping with zoom-aware 8px threshold capped at .35s, visible guide, persistent toggle and Alt bypass. Left/Right navigates boundaries; Shift arrows nudge .1s; Space plays/pauses; Enter edits; Escape closes. Single-click cue playback is distinguished from double-click editing. Editor is a non-modal right-side workspace panel, inline on small windows, with start/end-at-playhead actions. Trim/move snapping respects adjacent cue limits; pointer cancellation restores the original cue. Autosave and video preview remain live during edits.
+
 Latest layout adjustment: removed the video-name lane and reduced the subtitle timeline to 180px to increase preview space. Native captions use 50% horizontal/vertical coordinates with centered line alignment, and the HTML fallback is centered too. This applies to normal/fullscreen playback.
 
 
@@ -11,7 +13,7 @@ Compact desktop pass: viewport-height workspace, smaller 16:9 preview alongside 
 
 Frontend startup hotfix: a cached unversioned timeline.mjs lacked shiftCues and prevented the entire app module from initializing. The geometry import is now versioned, a classic bootstrap dynamically fetches a fresh entry module and surfaces import failures, and frontend responses use explicit JavaScript MIME/no-store without 304 reuse. Added real module-linkage and HTTP static-response regression tests. favicon.ico returns 204 to avoid unrelated console noise. Browser console evidence confirmed the stale-module failure.
 
-Latest studio update (2026-11-16): explicit model load/status/unload with a persistent isolated worker, matching-model reuse and release on unload/cancel/server shutdown. Generation without a loaded model remains disposable. The larger timeline owns click-to-edit cue dialogs; the bottom subtitle list is removed. Added autosaved global forward/backward shifts, fixed 16:9 letterboxed playback, native captions for fullscreen and a contrasted charcoal palette/button system. Timestamp-aware audio resampling preserves delayed-stream leading silence; preview caches are versioned. Existing project timings require manual shift/regeneration rather than silent migration.
+Latest studio update (2026-11-16): explicit model load/status/unload with a persistent isolated worker, matching-model reuse and release on unload/cancel/server shutdown. Generation without a loaded model remains disposable. The larger timeline owns double-click cue editing in a non-modal right-side panel; the bottom subtitle list is removed. Added autosaved global forward/backward shifts, fixed 16:9 letterboxed playback, native captions for fullscreen and a contrasted charcoal palette/button system. Timestamp-aware audio resampling preserves delayed-stream leading silence; preview caches are versioned. Existing project timings require manual shift/regeneration rather than silent migration.
 
 Validation for this update: actual installed Turbo loaded, was reused for inference in the same process, and unloaded successfully. Added delayed-audio fixture, global-shift tests, model lifecycle tests and DOM checks for native caption tracks/inspector/fullscreen target. Real browser fullscreen/visual QA remains unverified; model alignment quality remains variable.
 
@@ -26,7 +28,7 @@ Validation for this update: actual installed Turbo loaded, was reused for infere
 
 ## Validation
 
-26 Python tests and 6 Node startup/timeline tests pass. DOM checks cover overlay gaps, serialized autosave, reset, project restoration/settings and removed controls. Actual FFmpeg conversion/audio extraction passed. Installed Turbo passed isolated silence and an eight-second speech sample producing 11 timed words. This confirms operation, not accuracy or long-file reliability.
+26 Python tests and 10 Node startup/timeline tests pass. DOM checks cover overlay gaps, serialized autosave, reset, project restoration/settings and removed controls. Actual FFmpeg conversion/audio extraction passed. Installed Turbo passed isolated silence and an eight-second speech sample producing 11 timed words. This confirms operation, not accuracy or long-file reliability.
 
 ## Remaining
 
