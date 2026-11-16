@@ -31,7 +31,11 @@ class LocalModelsTests(unittest.TestCase):
         key,_=local_models.register(str(self.folder),'multilingual')
         (self.folder/'model.bin').unlink()
         self.assertFalse(local_models.valid_folder(Path(local_models.catalog()[key]['path'])))
-    def test_nava_remains_unsupported(self):
+    def test_nava_is_rejected(self):
         folder=self.folder.rename(self.root/'Nava-ct2')
-        _,entry=local_models.register(str(folder),'multilingual')
-        self.assertEqual(entry['profile'],'nava')
+        with self.assertRaises(ValueError):local_models.register(str(folder),'multilingual')
+    def test_legacy_unsupported_entry_hidden_without_deleting_files(self):
+        local_models.REGISTRY.parent.mkdir()
+        local_models.REGISTRY.write_text(json.dumps({'old':{'path':str(self.folder),'profile':'nava','name':'Old model'}}))
+        self.assertNotIn('old',local_models.catalog())
+        self.assertTrue((self.folder/'model.bin').exists())

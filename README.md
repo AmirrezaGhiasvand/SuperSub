@@ -36,7 +36,6 @@ The selected folder must contain `model.bin`, `config.json`, `tokenizer.json` an
 
 - **Multilingual Whisper:** use for standard Whisper models, including Large V3 Turbo.
 - **Persian specialist:** use for Persian-only fine-tunes; select Persian as video language.
-- **Nava:** registration is possible, but generation is disabled until its separate alignment pipeline is implemented.
 
 Weights remain in their original location. Paths are remembered in ignored `data/local-models.json`; model selection is remembered by the browser. If a folder moves, locate it again. Standard folders under `models/` are also discovered automatically.
 
@@ -50,8 +49,6 @@ File lists and sizes checked against the repositories on **2026-11-16**. These a
 | [Whisper Medium](https://huggingface.co/Systran/faster-whisper-medium) | 1.53 GB | Multilingual Whisper | Intermediate-size candidate; not automatically faster than Turbo. Not locally benchmarked. |
 | [Whisper Large V3 Turbo](https://huggingface.co/dropbox-dash/faster-whisper-large-v3-turbo) | 1.62 GB | Multilingual Whisper | Current local baseline: model load/reuse/unload and short speech inference passed. The older mobiuslabsgmbh repository URL redirects here. |
 | [Whisper Large V3](https://huggingface.co/Systran/faster-whisper-large-v3) | 3.09 GB | Multilingual Whisper | Larger full model for comparison when memory permits; no local quality/speed benchmark. |
-| [Givia Persian Turbo](https://huggingface.co/givia/whisper-large-v3-turbo-persian) | 3.24 GB source weights, plus local conversion output | Persian specialist | Persian fine-tune candidate. **Requires conversion** before SuperSub can load it; recognition/timing not validated locally. CC-BY-4.0 attribution applies. |
-| [Nava CTranslate2](https://huggingface.co/Nimruz/Nava-ct2) | 1.62 GB | Nava | **Not enabled for generation.** Separate validated alignment is still required; do not download it expecting working SRT generation yet. |
 
 The four ready-to-load repositories above declare MIT licensing; review their model cards and upstream terms before redistribution. No model is guaranteed to be perfect for Persian.
 
@@ -94,28 +91,16 @@ To download the exact Small files from a terminal using the CLI installed by set
 
 This is an explicit user-initiated download; setup itself still downloads no weights.
 
-### Persian specialist: source files and conversion
+### Optional ready-to-load download helper
 
-[Givia's source repository](https://huggingface.co/givia/whisper-large-v3-turbo-persian/tree/main) contains Transformers and GGML files. Neither `model.safetensors` nor `ggml-persian-v3-turbo.bin` can be selected directly in SuperSub. For an exact manual Transformers source download, keep these files together:
-
-| Source files | Purpose |
-| --- | --- |
-| [model.safetensors](https://huggingface.co/givia/whisper-large-v3-turbo-persian/resolve/main/model.safetensors?download=true) | Original Transformers weights (~3.24 GB); conversion input, not SuperSub runtime weights. |
-| [config.json](https://huggingface.co/givia/whisper-large-v3-turbo-persian/resolve/main/config.json?download=true), [generation_config.json](https://huggingface.co/givia/whisper-large-v3-turbo-persian/resolve/main/generation_config.json?download=true) | Original model architecture and generation configuration. |
-| [preprocessor_config.json](https://huggingface.co/givia/whisper-large-v3-turbo-persian/resolve/main/preprocessor_config.json?download=true), [processor_config.json](https://huggingface.co/givia/whisper-large-v3-turbo-persian/resolve/main/processor_config.json?download=true) | Audio/processor configuration. |
-| [tokenizer.json](https://huggingface.co/givia/whisper-large-v3-turbo-persian/resolve/main/tokenizer.json?download=true), [tokenizer_config.json](https://huggingface.co/givia/whisper-large-v3-turbo-persian/resolve/main/tokenizer_config.json?download=true), [special_tokens_map.json](https://huggingface.co/givia/whisper-large-v3-turbo-persian/resolve/main/special_tokens_map.json?download=true) | Tokenization and language/special-token definitions. |
-| [vocab.json](https://huggingface.co/givia/whisper-large-v3-turbo-persian/resolve/main/vocab.json?download=true), [merges.txt](https://huggingface.co/givia/whisper-large-v3-turbo-persian/resolve/main/merges.txt?download=true), [added_tokens.json](https://huggingface.co/givia/whisper-large-v3-turbo-persian/resolve/main/added_tokens.json?download=true), [normalizer.json](https://huggingface.co/givia/whisper-large-v3-turbo-persian/resolve/main/normalizer.json?download=true) | Supporting tokenizer vocabulary, merge rules, extra tokens and text normalization metadata. |
-
-Do **not** download the GGML binary for this workflow; it belongs to whisper.cpp, which SuperSub does not use.
-
-After placing those 12 source files in `C:\Models\givia-source`, convert them:
+Only ready-to-load CTranslate2 models are listed and downloaded. No conversion packages are needed:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pip install transformers torch
-.\.venv\Scripts\ct2-transformers-converter.exe --model "C:\Models\givia-source" --output_dir "C:\Models\givia-persian-ct2" --copy_files tokenizer.json preprocessor_config.json --quantization int8
+.\.venv\Scripts\python.exe install_models.py small
+# Other choices: medium, turbo, large-v3
 ```
 
-Select the **output folder**, with profile **Persian specialist** and language **Persian**. The converter writes new runtime `model.bin`, `config.json` and vocabulary files and copies the specified tokenizer/preprocessor files; never mix the source configuration with the converted output. Conversion requires additional disk and RAM. Keep the source model card/attribution when redistributing.
+The helper downloads only the exact runtime files in the table. These four standard folders are discovered automatically once present. Setup still never downloads weights. Existing working local CTranslate2 models remain usable through folder selection. The linked Givia Transformers/GGML repository is not a supported direct download for this engine and is excluded from the recommendations; no new engine or conversion workflow has been added.
 
 Once packages and model weights are present, generation uses local-only model loading. Verify offline operation with a short clip before relying on it.
 
@@ -191,7 +176,7 @@ node --experimental-vm-modules --test tests/startup.test.mjs tests/timeline.test
 node --check web/app.js
 ```
 
-Verified: **26 Python tests**, **10 Node startup/timeline tests**, DOM checks, FFmpeg conversion, and actual local Turbo inference on an eight-second speech sample. Full browser visual QA, long-video stress testing, offline validation and Persian accuracy benchmarking remain outstanding. GPU inference, separate forced alignment, Nava enablement, batch processing and burned-in export are not implemented. Cancellation terminates inference workers; audio extraction and independent preview conversion can still finish their current step.
+Verified: **28 Python tests**, **10 Node startup/timeline tests**, DOM checks, FFmpeg conversion, and actual local Turbo inference on an eight-second speech sample. Full browser visual QA, long-video stress testing, offline validation and Persian accuracy benchmarking remain outstanding. GPU inference, separate forced alignment, Nava enablement, batch processing and burned-in export are not implemented. Cancellation terminates inference workers; audio extraction and independent preview conversion can still finish their current step.
 
 Git contains code, scripts, tests and documentation. **Data, assets, models, virtual environments, credentials and caches are excluded.** Optional local logos can be placed in `assets/mansvolve-black.png` and `assets/mansvolve-white.png`.
 

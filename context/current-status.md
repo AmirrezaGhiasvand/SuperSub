@@ -4,7 +4,7 @@ Updated 2026-11-16. Current code is on main; this snapshot replaces historical i
 
 ## Implemented
 
-- Dependency-only Windows setup. Models are chosen locally; optional manual downloads/conversion never run during setup.
+- Dependency-only Windows setup. Models are chosen locally; optional manual downloads never run during setup.
 - Resident Load/Unload and disposable CPU INT8 inference with 2 threads, bounded <=60s windows, original timeline offsets and native-memory-failure recovery.
 - FFmpeg browser preview and normalized PCM, delayed-audio leading-silence preservation, direct samples bypassing PyAV metadata_errors.
 - Navbar project name/Generate/Cancel, browse only for new workspaces, left history/settings and default-open right inspector.
@@ -14,11 +14,11 @@ Updated 2026-11-16. Current code is on main; this snapshot replaces historical i
 - Default automatic word counts based on pauses (.45s, configurable .1–2s), optional manual limit, punctuation and 6s readability limits.
 - Centered native fullscreen captions, fixed 16:9 letterboxing, compact desktop layout and Mansvolve-inspired monochrome/pill UI. Inter/Vazirmatn/Martian Mono fonts and OFL licenses are bundled.
 - Versioned module startup/no-store responses prevent stale export failures.
-- README now has verified comparison/download/file-role tables and exact Persian source conversion instructions, checked 2026-11-16. No model weights were downloaded for documentation verification.
+- README now has verified comparison/download/file-role tables and ready-to-load instructions, checked 2026-11-16. No model weights were downloaded for documentation verification.
 
 ## Verified
 
-26 Python tests and 10 JavaScript startup/timeline tests pass. DOM checks cover active-cue following, navbar, hidden browsing, default-open editor, keyboard/snapping, autosave and project restoration. Actual Turbo passed load/reuse/unload, silence and an eight-second speech sample yielding 11 timed words. FFmpeg conversion and delayed-audio fixtures pass.
+28 Python tests and 10 JavaScript startup/timeline tests pass. DOM checks cover active-cue following, navbar, hidden browsing, default-open editor, keyboard/snapping, autosave and project restoration. Actual Turbo passed load/reuse/unload, silence and an eight-second speech sample yielding 11 timed words. FFmpeg conversion and delayed-audio fixtures pass.
 
 File listings verified: Small, Medium, Large V3 Turbo, Large V3, Givia Persian source and Nava CT2. Only existing Turbo has local inference smoke results; other models are not accuracy/runtime benchmarks.
 
@@ -29,3 +29,5 @@ Real-browser visual/fullscreen/responsive/accessibility QA, full offline checks,
 Preview/audio extraction can finish the active step after cancellation. Restart does not resume jobs; empty imports can remain outside history. No GPU inference, Nava/forced alignment, batch queue, burned-in export, translation or diarization.
 
 Runtime is FastAPI/static JS/JSON. React/TypeScript/Tailwind/SQLite were original proposals, not installation prerequisites. Data/assets/models/venv/tools/secrets are excluded from Git; licensed fonts in web/fonts are shipped source dependencies.
+
+Supported-model policy update: user chose to keep the existing engine. Public recommendations and download helper now list Small, Medium, Turbo and Large V3 only. No conversion-only source or disabled Nava option is offered. Nava registrations are rejected and legacy entries are hidden without deleting files. Existing working local Persian CT2 models remain supported. install_models.py never converts and only fetches the exact runtime files.

@@ -1,17 +1,21 @@
-"""Explicit, online model installation. Run inside the application venv."""
+"""Explicit downloads of ready-to-load CTranslate2 models; no conversion."""
 from pathlib import Path
 import argparse
 from huggingface_hub import snapshot_download
 
-root=Path(__file__).parent/'models'
-p=argparse.ArgumentParser()
-p.add_argument('model', choices=['turbo','persian','nava'])
-a=p.parse_args()
-if a.model=='turbo':
-    snapshot_download('mobiuslabsgmbh/faster-whisper-large-v3-turbo',local_dir=root/'whisper-large-v3-turbo')
-elif a.model=='nava':
-    snapshot_download('Nimruz/Nava-ct2',local_dir=root/'nava-ct2')
-else:
-    from ctranslate2.converters import TransformersConverter
-    source=snapshot_download('givia/whisper-large-v3-turbo-persian')
-    TransformersConverter(source,copy_files=['tokenizer.json','preprocessor_config.json']).convert(str(root/'givia-persian'),quantization='int8')
+MODELS = {
+    'small': ('Systran/faster-whisper-small', 'whisper-small', ['model.bin','config.json','tokenizer.json','vocabulary.txt']),
+    'medium': ('Systran/faster-whisper-medium', 'whisper-medium', ['model.bin','config.json','tokenizer.json','vocabulary.txt']),
+    'turbo': ('dropbox-dash/faster-whisper-large-v3-turbo', 'whisper-large-v3-turbo', ['model.bin','config.json','tokenizer.json','vocabulary.json','preprocessor_config.json']),
+    'large-v3': ('Systran/faster-whisper-large-v3', 'whisper-large-v3', ['model.bin','config.json','tokenizer.json','vocabulary.json','preprocessor_config.json']),
+}
+
+def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('model',choices=MODELS)
+    args=parser.parse_args()
+    repo,folder,files=MODELS[args.model]
+    snapshot_download(repo,local_dir=Path(__file__).parent/'models'/folder,allow_patterns=files)
+    print('Download complete. Locate this folder in SuperSub and choose Multilingual Whisper.')
+
+if __name__=='__main__':main()

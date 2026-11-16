@@ -2,7 +2,7 @@
 
 Updated 2026-11-16. See the root README for the complete installation and troubleshooting walkthrough.
 
-Model downloads: [comparison](../README.md#model-choices), [exact files](../README.md#manual-download-exact-files), [Persian conversion](../README.md#persian-specialist-source-files-and-conversion). Small/Medium use vocabulary.txt; Turbo/Large V3 use vocabulary.json and preprocessor_config.json. Do not mix repositories, rename vocabulary files or select unconverted source checkpoints. Listings checked 2026-11-16; setup still downloads no weights.
+Model downloads: [comparison](../README.md#model-choices), [exact files](../README.md#manual-download-exact-files). Small/Medium use vocabulary.txt; Turbo/Large V3 use vocabulary.json and preprocessor_config.json. Do not mix repositories, rename vocabulary files or select unconverted source checkpoints. Listings checked 2026-11-16; setup still downloads no weights.
 
 Current workspace: Generate/Cancel and project name live in the navbar; browsing is hidden once media is selected. The right editor stays open and follows playback. Left/Right moves .1s, Shift arrows 1s, Up/Down subtitle starts. Font files/licenses ship under web/fonts, with no runtime Google Fonts dependency.
 
@@ -21,7 +21,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\setup.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\start.ps1
 ```
 
-setup.ps1 supports -Python with an executable path when creating a venv. start.ps1 supports -Port and -NoBrowser. There is no SkipModel flag. Optional install_models.py downloads are manual only.
+setup.ps1 supports -Python with an executable path when creating a venv. start.ps1 supports -Port and -NoBrowser. There is no SkipModel flag. Optional install_models.py downloads are manual only, with choices small, medium, turbo and large-v3. All are ready-to-load CTranslate2; conversion is not offered.
 
 To update: stop server, git pull --ff-only, rerun Setup.cmd, launch Start.cmd and Ctrl+F5. Back up data while stopped; external model folders need separate backup. ZIP users should extract updates separately and carefully transfer backed-up data. Absolute model paths are device-specific.
 
