@@ -1,6 +1,10 @@
 # Setup and handoff
 
-Updated 2026-11-15. See the root README for the complete installation and troubleshooting walkthrough.
+Updated 2026-11-16. See the root README for the complete installation and troubleshooting walkthrough.
+
+Model downloads: [comparison](../README.md#model-choices), [exact files](../README.md#manual-download-exact-files), [Persian conversion](../README.md#persian-specialist-source-files-and-conversion). Small/Medium use vocabulary.txt; Turbo/Large V3 use vocabulary.json and preprocessor_config.json. Do not mix repositories, rename vocabulary files or select unconverted source checkpoints. Listings checked 2026-11-16; setup still downloads no weights.
+
+Current workspace: Generate/Cancel and project name live in the navbar; browsing is hidden once media is selected. The right editor stays open and follows playback. Left/Right moves .1s, Shift arrows 1s, Up/Down subtitle starts. Font files/licenses ship under web/fonts, with no runtime Google Fonts dependency.
 
 1. Install 64-bit Python 3.11+ with PATH enabled (development tested Python 3.14).
 2. Clone https://github.com/AmirrezaGhiasvand/SuperSub.git or extract its ZIP. Private repository access requires an authorized account.

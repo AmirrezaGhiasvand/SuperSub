@@ -40,18 +40,84 @@ The selected folder must contain `model.bin`, `config.json`, `tokenizer.json` an
 
 Weights remain in their original location. Paths are remembered in ignored `data/local-models.json`; model selection is remembered by the browser. If a folder moves, locate it again. Standard folders under `models/` are also discovered automatically.
 
-Optional manual downloads are available through `install_models.py`; they are never run by setup or generation:
+### Model choices
 
-```powershell
-.\.venv\Scripts\python.exe install_models.py turbo
-# Optional Persian conversion requires extra packages:
-.\.venv\Scripts\python.exe -m pip install transformers torch
-.\.venv\Scripts\python.exe install_models.py persian
+File lists and sizes checked against the repositories on **2026-11-16**. These are multilingual models (choose Persian in SuperSub); avoid English-only `.en` variants for Persian. Download size is **not** runtime RAM usage. Only the existing Turbo has been smoke-tested locally; the other rows list compatible formats, not measured Persian accuracy or timing.
+
+| Model / repository | Weight download, approximately | SuperSub profile | When to try it / current status |
+| --- | --- | --- | --- |
+| [Whisper Small](https://huggingface.co/Systran/faster-whisper-small) | 484 MB | Multilingual Whisper | Smaller weights and a lower memory starting point for a constrained PC. Review Persian accuracy on your own clips. |
+| [Whisper Medium](https://huggingface.co/Systran/faster-whisper-medium) | 1.53 GB | Multilingual Whisper | Intermediate-size candidate; not automatically faster than Turbo. Not locally benchmarked. |
+| [Whisper Large V3 Turbo](https://huggingface.co/dropbox-dash/faster-whisper-large-v3-turbo) | 1.62 GB | Multilingual Whisper | Current local baseline: model load/reuse/unload and short speech inference passed. The older mobiuslabsgmbh repository URL redirects here. |
+| [Whisper Large V3](https://huggingface.co/Systran/faster-whisper-large-v3) | 3.09 GB | Multilingual Whisper | Larger full model for comparison when memory permits; no local quality/speed benchmark. |
+| [Givia Persian Turbo](https://huggingface.co/givia/whisper-large-v3-turbo-persian) | 3.24 GB source weights, plus local conversion output | Persian specialist | Persian fine-tune candidate. **Requires conversion** before SuperSub can load it; recognition/timing not validated locally. CC-BY-4.0 attribution applies. |
+| [Nava CTranslate2](https://huggingface.co/Nimruz/Nava-ct2) | 1.62 GB | Nava | **Not enabled for generation.** Separate validated alignment is still required; do not download it expecting working SRT generation yet. |
+
+The four ready-to-load repositories above declare MIT licensing; review their model cards and upstream terms before redistribution. No model is guaranteed to be perfect for Persian.
+
+### Manual download: exact files
+
+Choose **one** row and put **all** linked files into its own folder. File links download the actual binaries rather than Git LFS pointer text. Keep filenames unchanged and do not mix tokenizer/config/vocabulary files from different models or revisions. You do not need README.md or .gitattributes to run these converted models.
+
+| Ready-to-load model | Exact files to download into one folder |
+| --- | --- |
+| Small | [model.bin](https://huggingface.co/Systran/faster-whisper-small/resolve/main/model.bin?download=true), [config.json](https://huggingface.co/Systran/faster-whisper-small/resolve/main/config.json?download=true), [tokenizer.json](https://huggingface.co/Systran/faster-whisper-small/resolve/main/tokenizer.json?download=true), [vocabulary.txt](https://huggingface.co/Systran/faster-whisper-small/resolve/main/vocabulary.txt?download=true) |
+| Medium | [model.bin](https://huggingface.co/Systran/faster-whisper-medium/resolve/main/model.bin?download=true), [config.json](https://huggingface.co/Systran/faster-whisper-medium/resolve/main/config.json?download=true), [tokenizer.json](https://huggingface.co/Systran/faster-whisper-medium/resolve/main/tokenizer.json?download=true), [vocabulary.txt](https://huggingface.co/Systran/faster-whisper-medium/resolve/main/vocabulary.txt?download=true) |
+| Large V3 Turbo | [model.bin](https://huggingface.co/dropbox-dash/faster-whisper-large-v3-turbo/resolve/main/model.bin?download=true), [config.json](https://huggingface.co/dropbox-dash/faster-whisper-large-v3-turbo/resolve/main/config.json?download=true), [tokenizer.json](https://huggingface.co/dropbox-dash/faster-whisper-large-v3-turbo/resolve/main/tokenizer.json?download=true), [vocabulary.json](https://huggingface.co/dropbox-dash/faster-whisper-large-v3-turbo/resolve/main/vocabulary.json?download=true), [preprocessor_config.json](https://huggingface.co/dropbox-dash/faster-whisper-large-v3-turbo/resolve/main/preprocessor_config.json?download=true) |
+| Large V3 | [model.bin](https://huggingface.co/Systran/faster-whisper-large-v3/resolve/main/model.bin?download=true), [config.json](https://huggingface.co/Systran/faster-whisper-large-v3/resolve/main/config.json?download=true), [tokenizer.json](https://huggingface.co/Systran/faster-whisper-large-v3/resolve/main/tokenizer.json?download=true), [vocabulary.json](https://huggingface.co/Systran/faster-whisper-large-v3/resolve/main/vocabulary.json?download=true), [preprocessor_config.json](https://huggingface.co/Systran/faster-whisper-large-v3/resolve/main/preprocessor_config.json?download=true) |
+
+| File | What it does |
+| --- | --- |
+| `model.bin` | CTranslate2 model weights; the large file containing learned speech-recognition parameters. A tiny text file with this name is likely an LFS pointer, not usable weights. |
+| `config.json` | Converted model configuration used by CTranslate2. Use the config from the same converted repository as model.bin. |
+| `tokenizer.json` | Tokenizer rules, special tokens and token IDs. Required by SuperSub's folder check and local tokenization. |
+| `vocabulary.txt` **or** `vocabulary.json` | Token vocabulary in the format shipped by that converted model. Download the version listed in its row; do not rename one extension to the other. |
+| `preprocessor_config.json` | Audio feature-extraction metadata where supplied by the repository. Small/Medium above do not supply it; do not invent or copy it from another model. |
+
+For example:
+
+```text
+C:\Models\whisper-small\
+    model.bin
+    config.json
+    tokenizer.json
+    vocabulary.txt
 ```
 
-The Persian download uses [Givia Persian Turbo](https://huggingface.co/givia/whisper-large-v3-turbo-persian). Review its model card and attribution terms before redistributing weights.
+In SuperSub choose **Locate local model → Browse folders… → C:\Models\whisper-small → Multilingual Whisper → Use this model**, then Load model or Generate. Keep the whole folder available at the same path.
 
-Once packages and models are present, generation uses local-only model loading. Verify offline operation with a short clip before relying on it.
+To download the exact Small files from a terminal using the CLI installed by setup:
+
+```powershell
+.\.venv\Scripts\hf.exe download Systran/faster-whisper-small model.bin config.json tokenizer.json vocabulary.txt --local-dir "C:\Models\whisper-small"
+```
+
+This is an explicit user-initiated download; setup itself still downloads no weights.
+
+### Persian specialist: source files and conversion
+
+[Givia's source repository](https://huggingface.co/givia/whisper-large-v3-turbo-persian/tree/main) contains Transformers and GGML files. Neither `model.safetensors` nor `ggml-persian-v3-turbo.bin` can be selected directly in SuperSub. For an exact manual Transformers source download, keep these files together:
+
+| Source files | Purpose |
+| --- | --- |
+| [model.safetensors](https://huggingface.co/givia/whisper-large-v3-turbo-persian/resolve/main/model.safetensors?download=true) | Original Transformers weights (~3.24 GB); conversion input, not SuperSub runtime weights. |
+| [config.json](https://huggingface.co/givia/whisper-large-v3-turbo-persian/resolve/main/config.json?download=true), [generation_config.json](https://huggingface.co/givia/whisper-large-v3-turbo-persian/resolve/main/generation_config.json?download=true) | Original model architecture and generation configuration. |
+| [preprocessor_config.json](https://huggingface.co/givia/whisper-large-v3-turbo-persian/resolve/main/preprocessor_config.json?download=true), [processor_config.json](https://huggingface.co/givia/whisper-large-v3-turbo-persian/resolve/main/processor_config.json?download=true) | Audio/processor configuration. |
+| [tokenizer.json](https://huggingface.co/givia/whisper-large-v3-turbo-persian/resolve/main/tokenizer.json?download=true), [tokenizer_config.json](https://huggingface.co/givia/whisper-large-v3-turbo-persian/resolve/main/tokenizer_config.json?download=true), [special_tokens_map.json](https://huggingface.co/givia/whisper-large-v3-turbo-persian/resolve/main/special_tokens_map.json?download=true) | Tokenization and language/special-token definitions. |
+| [vocab.json](https://huggingface.co/givia/whisper-large-v3-turbo-persian/resolve/main/vocab.json?download=true), [merges.txt](https://huggingface.co/givia/whisper-large-v3-turbo-persian/resolve/main/merges.txt?download=true), [added_tokens.json](https://huggingface.co/givia/whisper-large-v3-turbo-persian/resolve/main/added_tokens.json?download=true), [normalizer.json](https://huggingface.co/givia/whisper-large-v3-turbo-persian/resolve/main/normalizer.json?download=true) | Supporting tokenizer vocabulary, merge rules, extra tokens and text normalization metadata. |
+
+Do **not** download the GGML binary for this workflow; it belongs to whisper.cpp, which SuperSub does not use.
+
+After placing those 12 source files in `C:\Models\givia-source`, convert them:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install transformers torch
+.\.venv\Scripts\ct2-transformers-converter.exe --model "C:\Models\givia-source" --output_dir "C:\Models\givia-persian-ct2" --copy_files tokenizer.json preprocessor_config.json --quantization int8
+```
+
+Select the **output folder**, with profile **Persian specialist** and language **Persian**. The converter writes new runtime `model.bin`, `config.json` and vocabulary files and copies the specified tokenizer/preprocessor files; never mix the source configuration with the converted output. Conversion requires additional disk and RAM. Keep the source model card/attribution when redistributing.
+
+Once packages and model weights are present, generation uses local-only model loading. Verify offline operation with a short clip before relying on it.
 
 ## Generate, edit and export
 
@@ -63,7 +129,7 @@ Timeline snapping is on by default. Click near a subtitle start/end to snap the 
 
 The navbar holds the project name and Generate/Cancel controls. Browse is shown only for a new workspace; after selecting media or opening a project, the right-side editor stays open by default, including an empty state before generation. Single-click a subtitle to play/select it; double-click or Enter selects it for editing. Escape clears the selection without hiding the panel. New project restores browsing. Its **Start/End at playhead** buttons align edges precisely, within neighboring-cue constraints. The editor is non-modal and never covers the video.
 
-The desktop workspace fits the viewport with a compact 16:9 preview beside media/generation controls, a compact subtitle-only timeline, and a compact export footer. Long settings scroll inside the sidebar. Narrow or short windows retain normal page flow so controls remain accessible. Buttons use flat surfaces, restrained borders and clear hover/focus states.
+The desktop workspace fits the viewport with a compact 16:9 preview beside the always-open subtitle editor, a compact subtitle-only timeline, and a compact export footer. Long settings scroll inside the sidebar. Narrow or short windows retain normal page flow so controls remain accessible. Buttons use flat surfaces, restrained borders and clear hover/focus states.
 
 Use **Load model** to keep the selected model ready in a separate process; **Unload** releases its process and model memory. Generation reuses a matching loaded model. With no loaded model, generation still loads temporarily and releases it afterward. Wait for loading to finish, and unload or switch models before generating with a different selection. Loading/unloading is blocked during generation; cancelling a resident job unloads that worker. Keeping a model loaded consumes memory until explicitly unloaded or the server exits.
 
