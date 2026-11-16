@@ -72,9 +72,9 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto}
 /* Non-modal cue inspector shares the workspace with the live preview. */
 #cue-inspector.side-editor[hidden]{display:none}
 #cue-inspector.side-editor{width:auto;min-width:0;min-height:0;padding:14px;background:var(--raised);border:1px solid var(--line);border-radius:12px;overflow:auto;box-sizing:border-box}
-.workspace.inspector-open{grid-template-columns:minmax(0,1fr) 280px}
+
 .workspace>.preview-row,.workspace>.timeline-controls,.workspace>#timeline-scroll,.workspace>.workspace-footer{grid-column:1}
-.workspace>#cue-inspector{grid-column:2;grid-row:1 / -1}
+
 #cue-inspector.side-editor textarea{font-size:18px;min-height:130px;resize:vertical}
 #cue-inspector .inspector-header h2{font-size:15px}
 #cue-inspector .inspector-times{gap:8px}
@@ -86,5 +86,18 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto}
 #snap-guide{position:absolute;top:0;bottom:0;width:1px;background:#78e0c3;pointer-events:none;z-index:4;box-shadow:0 0 5px #78e0c3}
 .timeline-cue{touch-action:none}
 #timeline-scroll{touch-action:pan-x}
-@media(min-width:901px) and (max-width:1350px){.workspace.inspector-open .preview-row{grid-template-columns:1fr}.workspace.inspector-open .media-actions{display:none}}
-@media(max-width:900px),(max-height:699px){.workspace.inspector-open{grid-template-columns:minmax(0,1fr)}.workspace>#cue-inspector{grid-column:1;grid-row:auto;max-height:400px}.workspace>.workspace-footer{grid-column:1}}
+
+
+
+/* Editing reuses the import/generation slot without changing preview geometry. */
+.media-slot{position:relative;min-width:0;min-height:0;height:100%;overflow:hidden}
+.media-slot>.media-actions{height:100%;box-sizing:border-box;overflow:auto}
+.media-slot>#cue-inspector.side-editor{position:absolute;inset:0;width:100%;height:100%;max-height:none;padding:12px;border-radius:10px;overflow:auto;z-index:2}
+.workspace.inspector-open .media-actions{visibility:hidden;pointer-events:none}
+#cue-inspector.side-editor textarea{height:80px;min-height:80px;font-size:17px}
+#cue-inspector .inspector-header h2{font-size:13px}
+#cue-inspector label{margin-top:8px}
+#cue-inspector .inspector-actions{gap:5px}
+#cue-inspector .playhead-actions{gap:5px;margin-top:8px}
+#cue-inspector button{padding:6px;font-size:10px;min-height:28px}
+@media(max-width:900px),(max-height:699px){.media-slot{height:auto;min-height:300px}.media-slot>.media-actions{height:auto}}

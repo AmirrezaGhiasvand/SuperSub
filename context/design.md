@@ -1,5 +1,7 @@
 # Design
 
+Editor placement update: the inspector now overlays a fixed media-actions slot, covering Browse/Generate while editing. It no longer adds a workspace column or changes preview/timeline geometry. Background controls are invisible and inert until Close/Escape restores them. The editor scrolls internally when necessary; video remains visible.
+
 Timeline editor is now a non-modal panel on the right of the workspace, not a dialog. Single cue clicks play; double clicks open the editor. Snap targets use a mint guide, with a toggle in the toolbar and boundary navigation buttons. Keyboard controls are documented in README/tooltips. Panel and preview share space; narrower desktops hide the import controls while editing, and small windows place the editor inline. Escape or Close restores the workspace.
 
 Compact desktop layout (2026-11-16): at >=901px width and >=700px height, header/main use a viewport-height grid with no page scrolling. The 16:9 preview shrinks to its available top-row space next to media/generation controls. The subtitle-only timeline uses 180px height, returning the removed video-name lane space to the preview; controls and export/save footer are compact. Settings use internal overflow; smaller windows retain accessible page flow. Buttons use flat fills and subtle borders, without gradients, shadows or moving hover effects. Focus rings remain visible.

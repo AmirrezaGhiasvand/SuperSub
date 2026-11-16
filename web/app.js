@@ -80,7 +80,7 @@ function rebuildCaptions(){
   for(const c of current?.cues||[]){if(!Number.isFinite(c.start)||!Number.isFinite(c.end)||c.end<=c.start)continue;const text=c.text.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');const cue=new VTTCue(c.start,c.end,text);cue.align='center';cue.snapToLines=false;cue.line=50;cue.lineAlign='center';cue.position=50;cue.positionAlign='center';cue.size=85;captionTrack.addCue(cue)}
   captionTrack.mode='showing';$('video-subtitle').hidden=true;
 }
-function openInspector(index){if(busy||!current?.cues[index])return;selectedCue=index;const c=current.cues[index];$('inspector-title').textContent='Subtitle '+(index+1)+' of '+current.cues.length;$('inspector-text').value=c.text;$('inspector-start').value=c.start.toFixed(3);$('inspector-end').value=c.end.toFixed(3);$('inspector-prev').disabled=index===0;$('inspector-next').disabled=index===current.cues.length-1;$('inspector-status').textContent=dirty?'Saving…':'All changes saved';$('cue-inspector').hidden=false;document.querySelector('.workspace').classList.add('inspector-open');renderTimeline()}
+function openInspector(index){if(busy||!current?.cues[index])return;selectedCue=index;const c=current.cues[index];$('inspector-title').textContent='Subtitle '+(index+1)+' of '+current.cues.length;$('inspector-text').value=c.text;$('inspector-start').value=c.start.toFixed(3);$('inspector-end').value=c.end.toFixed(3);$('inspector-prev').disabled=index===0;$('inspector-next').disabled=index===current.cues.length-1;$('inspector-status').textContent=dirty?'Saving…':'All changes saved';$('cue-inspector').hidden=false;document.querySelector('.media-actions').inert=true;document.querySelector('.workspace').classList.add('inspector-open');renderTimeline()}
 for(const key of ['text','start','end'])$('inspector-'+key).oninput=()=>{if(selectedCue<0||!current)return;current.cues[selectedCue][key]=key==='text'?$('inspector-text').value:Number($('inspector-'+key).value);markChanged()};
 $('inspector-close').onclick=()=>closeInspector();
 $('inspector-prev').onclick=()=>{openInspector(selectedCue-1);seek(current.cues[selectedCue].start)};
@@ -101,7 +101,7 @@ setInterval(()=>refreshResident().catch(()=>{}),1500);refreshResident().catch(me
 let snapEnabled=localStorage.getItem('supersub-snapping')!=='false';
 function snapThreshold(){return Math.min(.35,8/pixels())}
 function showSnap(time){$('snap-guide').hidden=time===null;if(time!==null)$('snap-guide').style.left=time*pixels()+'px'}
-function closeInspector(){selectedCue=-1;$('cue-inspector').hidden=true;document.querySelector('.workspace').classList.remove('inspector-open')}
+function closeInspector(){selectedCue=-1;document.querySelector('.media-actions').inert=false;$('cue-inspector').hidden=true;document.querySelector('.workspace').classList.remove('inspector-open')}
 async function playFromCue(index){if(busy||!current?.cues[index])return;selectedCue=index;seek(current.cues[index].start);if(!$('cue-inspector').hidden)openInspector(index);await $('video').play()}
 function jumpBoundary(direction){if(busy)return;$('video').pause();const next=nextBoundary(current?.cues||[],$('video').currentTime,direction);if(next!==null){seek(next);const x=next*pixels(),view=$('timeline-scroll');if(x<view.scrollLeft||x>view.scrollLeft+view.clientWidth)view.scrollLeft=Math.max(0,x-view.clientWidth/2)}}
 $('previous-boundary').onclick=()=>jumpBoundary(-1);$('next-boundary').onclick=()=>jumpBoundary(1);

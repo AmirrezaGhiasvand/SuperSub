@@ -4,6 +4,8 @@ Updated 2026-11-15. This snapshot replaces obsolete chronological implementation
 
 ## Implemented
 
+Latest editor placement: cue editing reuses the browse/generate slot as an overlay without resizing the preview or timeline. Background media controls become inert while the editor is open; closing restores them. DOM interaction and startup checks pass; visual browser verification remains pending.
+
 Latest timeline interaction update: edge/playhead snapping with zoom-aware 8px threshold capped at .35s, visible guide, persistent toggle and Alt bypass. Left/Right navigates boundaries; Shift arrows nudge .1s; Space plays/pauses; Enter edits; Escape closes. Single-click cue playback is distinguished from double-click editing. Editor is a non-modal right-side workspace panel, inline on small windows, with start/end-at-playhead actions. Trim/move snapping respects adjacent cue limits; pointer cancellation restores the original cue. Autosave and video preview remain live during edits.
 
 Latest layout adjustment: removed the video-name lane and reduced the subtitle timeline to 180px to increase preview space. Native captions use 50% horizontal/vertical coordinates with centered line alignment, and the HTML fallback is centered too. This applies to normal/fullscreen playback.

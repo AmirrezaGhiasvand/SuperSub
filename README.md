@@ -59,7 +59,7 @@ Once packages and models are present, generation uses local-only model loading. 
 
 Timeline snapping is on by default. Click near a subtitle start/end to snap the playhead; drag a subtitle or its trim edges near neighboring boundaries or the paused playhead to snap. A guide marks the snap target. Toggle **Snap on/off** or hold **Alt** while dragging to bypass it. Boundary navigation: **Left/Right** moves to the previous/next cue edge; **Shift+Left/Right** nudges 0.1s; **Space** toggles playback. Inputs keep their normal typing behavior.
 
-Single-click a subtitle to play from its start. Double-click (or press **Enter** on a focused cue) to open its autosaving editor on the right, alongside the preview. **Escape** closes the editor. Its **Start/End at playhead** buttons align edges precisely, within neighboring-cue constraints. The panel is non-modal; narrow windows place it inline so it does not cover the preview.
+Single-click a subtitle to play from its start. Double-click (or press **Enter** on a focused cue) to open its autosaving editor over the browse/generate area beside the preview. The player and timeline keep their size. **Escape** closes the editor and restores import/generation controls. Its **Start/End at playhead** buttons align edges precisely, within neighboring-cue constraints. The editor is non-modal and never covers the video.
 
 The desktop workspace fits the viewport with a compact 16:9 preview beside media/generation controls, a compact subtitle-only timeline, and a compact export footer. Long settings scroll inside the sidebar. Narrow or short windows retain normal page flow so controls remain accessible. Buttons use flat surfaces, restrained borders and clear hover/focus states.
 
