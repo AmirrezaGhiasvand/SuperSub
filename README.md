@@ -57,7 +57,7 @@ Once packages and models are present, generation uses local-only model loading. 
 
 ### Model and timeline controls
 
-The desktop workspace fits the viewport with a compact 16:9 preview beside media/generation controls, an unchanged full-height timeline, and a compact export footer. Long settings scroll inside the sidebar. Narrow or short windows retain normal page flow so controls remain accessible. Buttons use flat surfaces, restrained borders and clear hover/focus states.
+The desktop workspace fits the viewport with a compact 16:9 preview beside media/generation controls, a compact subtitle-only timeline, and a compact export footer. Long settings scroll inside the sidebar. Narrow or short windows retain normal page flow so controls remain accessible. Buttons use flat surfaces, restrained borders and clear hover/focus states.
 
 Use **Load model** to keep the selected model ready in a separate process; **Unload** releases its process and model memory. Generation reuses a matching loaded model. With no loaded model, generation still loads temporarily and releases it afterward. Wait for loading to finish, and unload or switch models before generating with a different selection. Loading/unloading is blocked during generation; cancelling a resident job unloads that worker. Keeping a model loaded consumes memory until explicitly unloaded or the server exits.
 
@@ -71,7 +71,7 @@ New audio extraction and preview conversion preserve delayed-audio leading silen
 
 Generation displays a loading screen with phase, elapsed time, progress and cancellation, followed by a completion dialog. Preview conversion happens separately and may take time. Imported media receives a browser-compatible H.264/AAC MP4 preview; original files are unchanged.
 
-The timeline shows the media track, subtitle blocks and playhead. Click to seek, zoom for precision, drag blocks to move them, or drag edges to trim without crossing adjacent cues. Subtitle text is overlaid on the video during each cue. The overlay is for preview; the app does not export burned-in video.
+The timeline shows subtitle blocks and the playhead; the video-name track is removed to give the preview more room. Captions are centered horizontally and vertically in normal and fullscreen playback. Click to seek, zoom for precision, drag blocks to move them, or drag edges to trim without crossing adjacent cues. Subtitle text is overlaid on the video during each cue. The overlay is for preview; the app does not export burned-in video.
 
 Text and timing edits autosave. Resolve save errors before leaving. SRT download flushes pending edits and exports the saved cues. Existing projects keep their timings until edited or explicitly regenerated.
 

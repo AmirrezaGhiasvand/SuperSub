@@ -4,6 +4,9 @@ Updated 2026-11-15. This snapshot replaces obsolete chronological implementation
 
 ## Implemented
 
+Latest layout adjustment: removed the video-name lane and reduced the subtitle timeline to 180px to increase preview space. Native captions use 50% horizontal/vertical coordinates with centered line alignment, and the HTML fallback is centered too. This applies to normal/fullscreen playback.
+
+
 Compact desktop pass: viewport-height workspace, smaller 16:9 preview alongside media controls, unchanged timeline height, tight toolbars/footer and internally scrolling settings. Flat minimal button styling replaces raised gradients/hover motion. Small/short windows retain normal scrolling for access. DOM interaction checks pass; real-browser viewport layout verification remains pending because the browser host is unavailable.
 
 Frontend startup hotfix: a cached unversioned timeline.mjs lacked shiftCues and prevented the entire app module from initializing. The geometry import is now versioned, a classic bootstrap dynamically fetches a fresh entry module and surfaces import failures, and frontend responses use explicit JavaScript MIME/no-store without 304 reuse. Added real module-linkage and HTTP static-response regression tests. favicon.ico returns 204 to avoid unrelated console noise. Browser console evidence confirmed the stale-module failure.
